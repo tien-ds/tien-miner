@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/base64"
 	"github.com/ds/depaas/utils"
-	"github.com/loomnetwork/go-loom"
 	"github.com/sirupsen/logrus"
 	"github.com/tien-ds/contract-miner/miner"
 )
@@ -31,14 +30,9 @@ func GetChainKey() string {
 }
 
 func GetChainAddress() string {
-	privateKey, _ := base64.StdEncoding.DecodeString(GetChainKey())
-	publicKey := make([]byte, 32)
-	copy(publicKey, privateKey[32:])
-
-	addr := loom.LocalAddressFromPublicKey(publicKey[:])
-	address := base64.StdEncoding.EncodeToString(addr)
-	logrus.Debug("ChainAddress address:", address)
-	return address
+	addr := miner.PrivateKeyToAddr(GetChainKey())
+	logrus.Debug("ChainAddress ", addr)
+	return addr
 }
 
 func GetBindAddr() string {

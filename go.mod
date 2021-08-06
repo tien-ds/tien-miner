@@ -10,11 +10,13 @@ require (
 	github.com/btcsuite/btcd v0.21.0-beta
 	github.com/btcsuite/btcutil v1.0.2
 	github.com/buger/jsonparser v0.0.0-20181115193947-bf1c66bbce23
-	github.com/c2fo/vfs/v5 v5.7.0 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/ethereum/go-ethereum v1.8.20
+	github.com/fatih/color v1.10.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.1.2
 	github.com/go-ole/go-ole v1.2.5 // indirect
+	github.com/golang/mock v1.5.0 // indirect
+	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/ipfs/go-cid v0.0.7
 	github.com/ipfs/go-cidutil v0.0.2
@@ -26,20 +28,16 @@ require (
 	github.com/ipfs/go-ipfs-cmds v0.6.0
 	github.com/ipfs/go-ipfs-config v0.12.0
 	github.com/ipfs/go-ipfs-files v0.0.8
-	github.com/ipfs/go-ipfs-http-client v0.1.0
-	github.com/ipfs/go-ipfs-util v0.0.2
 	github.com/ipfs/go-log v1.0.4
 	github.com/ipfs/go-log/v2 v2.1.1
 	github.com/ipfs/go-merkledag v0.3.2
 	github.com/ipfs/go-mfs v0.1.2
 	github.com/ipfs/go-path v0.0.9
-	github.com/ipfs/go-unixfs v0.2.4 // indirect
 	github.com/ipfs/interface-go-ipfs-core v0.4.0
 	github.com/jbenet/go-is-domain v1.0.5
 	github.com/libp2p/go-libp2p v0.13.0
 	github.com/libp2p/go-libp2p-core v0.8.5
-	github.com/loomnetwork/go-loom v0.0.0
-	github.com/mattn/go-sqlite3 v1.14.8 // indirect
+	github.com/mattn/go-sqlite3 v1.14.8
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/multiformats/go-multiaddr v0.3.1
 	github.com/multiformats/go-multiaddr-dns v0.2.0
@@ -51,15 +49,21 @@ require (
 	github.com/tien-ds/contract-miner v0.0.0
 	github.com/tklauser/go-sysconf v0.3.7 // indirect
 	github.com/whyrusleeping/cbor-gen v0.0.0-20200715143311-227fab5a2377 // indirect
-	go.uber.org/zap v1.16.0
+	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
+	golang.org/x/net v0.0.0-20210503060351-7fd8e65b6420 // indirect
+	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c // indirect
+	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/genproto v0.0.0-20210604141403-392c879c8b08 // indirect
 )
 
 replace (
-	berty.tech/go-orbit-db v1.11.4 => ../go-orbit-db
 	github.com/ethereum/go-ethereum v1.8.20 => github.com/loomnetwork/go-ethereum v1.8.17-0.20191122084538-6128fa1a8c76
+
 	//must be
-	github.com/loomnetwork/go-loom v0.0.0 => ../go-loom
+	github.com/loomnetwork/go-loom v0.0.0 => github.com/tien-ds/go-loom v0.0.0-20210806092349-e916fc4e73d1
+
 	github.com/phonkee/go-pubsub v0.0.0 => github.com/loomnetwork/go-pubsub v0.0.0-20180626134536-2d1454660ed1
+
 	github.com/tien-ds/contract-miner v0.0.0 => ../contract-miner
 )
