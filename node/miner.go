@@ -130,17 +130,12 @@ func httpPost(url string, info []byte) (*http.Response, int64, error) {
 	return resp, time, err
 }
 
-func aesKey() string {
-	return "0000000000HNToLr1j37vkGoiLgsiKF2"
-	//return fmt.Sprintf("%s%d", "0HNToLr1j37vkGoiLgsiKF2", time.Now().Unix()/10)
-}
-
 func makeAesMsg(msg []byte) []byte {
 	if msg == nil {
 		return nil
 	}
-	key := aesKey()
-	encrypted := utils.AesEncryptCBC(msg, []byte(key))
+	key := utils.AesPasswd()
+	encrypted := utils.AesEncryptCBC(msg, key)
 
 	logrus.Debug("MAKE_AES_MSG origin:", string(msg))
 	d := protocol.AesType{
@@ -165,9 +160,9 @@ func decodeAesMsg(msg []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	key := aesKey()
+	key := utils.AesPasswd()
 	logrus.Debug("decodeAesMsg AesDecryptCBC str:", str)
-	decrypted := utils.AesDecryptCBC(deData, []byte(key))
+	decrypted := utils.AesDecryptCBC(deData, key)
 	logrus.Debug("decodeAesMsg msg:", string(msg))
 	return decrypted, nil
 }
