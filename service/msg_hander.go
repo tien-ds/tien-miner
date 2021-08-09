@@ -62,7 +62,7 @@ type ChanMsg struct {
 }
 
 func (msg *msgService) read(msgBytes []byte) {
-	logrus.Debugf("read orign message: %s", string(msgBytes))
+	logrus.Tracef("read orign message: %s", string(msgBytes))
 	var typ protocol.MsgType
 	if err := msg.serialize.DECode(msgBytes, &typ); err != nil {
 		logrus.Error(err)
@@ -76,6 +76,7 @@ func (msg *msgService) read(msgBytes []byte) {
 		err := msg.serialize.DECode(msgBytes, &aes)
 		if err != nil {
 			logrus.Error(err)
+			msg.Close()
 			return
 		}
 
@@ -88,9 +89,10 @@ func (msg *msgService) read(msgBytes []byte) {
 		msgBytes = utils.AesDecryptCBC(encrypted, utils.AesPasswd())
 		if msgBytes == nil {
 			logrus.Error("aes origin error")
+			msg.Close()
 			return
 		}
-		logrus.Debugf("read aes message: %s", string(msgBytes))
+		logrus.Tracef("read aes message: %s", string(msgBytes))
 		if aes.Type == 0 {
 			msg.Close()
 			return
@@ -98,6 +100,7 @@ func (msg *msgService) read(msgBytes []byte) {
 
 		if err := msg.serialize.DECode(msgBytes, &typ); err != nil {
 			logrus.Error(err)
+			msg.Close()
 			return
 		}
 	}
