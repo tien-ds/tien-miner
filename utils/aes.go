@@ -5,8 +5,13 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"github.com/sirupsen/logrus"
 	"io"
+	"os"
+	"strings"
 )
+
+var Code string
 
 // AesEncryptCBC =================== CBC ======================
 func AesEncryptCBC(origData []byte, key []byte) (encrypted []byte) {
@@ -122,6 +127,13 @@ func AesDecryptCFB(encrypted []byte, key []byte) (decrypted []byte) {
 }
 
 func AesPasswd() []byte {
-	return []byte("0000000000HNToLr1j37vkGoiLgsiKF2")
-	//return []byte(fmt.Sprintf("%s%d", "0HNToLr1j37vkGoiLgsiKF2", time.Now().Unix()/10))
+	if Code == "" {
+		logrus.Errorf("connect encryption code error")
+		os.Exit(0)
+	}
+	if len(Code) != 32 {
+		s := strings.Repeat("0", 32-len(Code)) + Code
+		return []byte(s)
+	}
+	return []byte(Code)
 }
