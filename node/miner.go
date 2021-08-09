@@ -176,24 +176,25 @@ const (
 
 func diskTotalSpace() (float64, []disk.PartitionStat) {
 	var totalSpace uint64 = 0
-	distInfos, _ := disk.Partitions(false)
-	for _, info := range distInfos {
-		//data, _ := json.MarshalIndent(info, "", "  ")
-		if info.Device == "/dev/loop0" {
-			continue
-		}
-		diskinfo, err := disk.Usage(string(info.Mountpoint))
-		if err != nil {
-			logrus.Debug("diskTotalSpace err:", err)
-			continue
-		}
-		totalSpace += diskinfo.Total
-		//infodata, _ := json.MarshalIndent(diskinfo, "", "  ")
-		//logrus.Debug("data:", string(data), ",infodata:", string(infodata))
-	}
-
+	//distInfos, _ := disk.Partitions(false)
+	//for _, info := range distInfos {
+	//	//data, _ := json.MarshalIndent(info, "", "  ")
+	//	if info.Device == "/dev/loop0" {
+	//		continue
+	//	}
+	//	diskinfo, err := disk.Usage(string(info.Mountpoint))
+	//	if err != nil {
+	//		logrus.Debug("diskTotalSpace err:", err)
+	//		continue
+	//	}
+	//	totalSpace += diskinfo.Total
+	//	//infodata, _ := json.MarshalIndent(diskinfo, "", "  ")
+	//	//logrus.Debug("data:", string(data), ",infodata:", string(infodata))
+	//}
+	c, _ := ipds.GetNode().Repo.Config()
+	parseBytes, _ := humanize.ParseBytes(c.Datastore.StorageMax)
 	logrus.Debug("diskTotalSpace totalSpace:", humanize.Bytes(totalSpace))
-	return float64(totalSpace) / 1000000000, distInfos
+	return float64(parseBytes) / 1000000000, nil
 }
 
 func (ws *NodeContext) machineInfo() protocol.InfoType {
