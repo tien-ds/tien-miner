@@ -1,13 +1,4 @@
-# 1.gw node
-### 1.build
-```shell
-go build -x github.com/ds/depaas/cmd/gw
-```
-### run
-```shell
-./gw
-```
-# 2.miner node
+# 1.miner node
 ### 1.build
 ```shell
 go build -x -tags main github.com/ds/depaas/cmd/miner
