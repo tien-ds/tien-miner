@@ -20,7 +20,7 @@ func CurrentMBlock() *MBlock {
 }
 
 func (m *MBlock) StoreBlock(cid cid.Cid) error {
-	_, err := m.db.Exec(fmt.Sprintf("insert into block(cid) values('%s')", cid.String()))
+	_, err := m.db.Exec(fmt.Sprintf("replace into block(cid) values('%s')", cid.String()))
 	if err != nil {
 		logrus.Error(err)
 		return err

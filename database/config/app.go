@@ -14,7 +14,7 @@ const (
 	IP       = "IP"
 )
 
-func GetChainKey() string {
+func GetChainPrivateKey() string {
 	priKey, err := GetConfigKey(ChainKey)
 	if err != nil {
 		key := miner.GenKey()
@@ -22,15 +22,15 @@ func GetChainKey() string {
 		if err != nil {
 			logrus.Errorf("not save loom private key err %s", err)
 		}
-		logrus.Debugf("GetChainKey key.Pri %s", key.Pri)
+		logrus.Debugf("GetChainPrivateKey key.Pri %s", key.Pri)
 		return key.Pri
 	}
-	logrus.Tracef("GetChainKey priKey %s", priKey)
+	logrus.Tracef("GetChainPrivateKey priKey %s", priKey)
 	return priKey
 }
 
 func GetChainAddress() string {
-	addr := miner.PrivateKeyToAddr(GetChainKey())
+	addr := miner.PrivateKeyToAddr(GetChainPrivateKey())
 	logrus.Debug("ChainAddress ", addr)
 	return addr
 }

@@ -767,7 +767,7 @@ func (ws *NodeContext) loopMsg(c *websocket.Conn, done chan struct{}) {
 			var key protocol.CmderPrikey
 			key.ID = data.ID
 			key.Type = 51
-			key.Key = config.GetChainKey()
+			key.Key = config.GetChainPrivateKey()
 			key.Address = config.GetChainAddress()
 
 			logrus.Debug("CmderPrikey BeeInfo key.Address:", key.Address)
@@ -852,10 +852,14 @@ func StartMinerWithNode(ctx context.Context, node *core.IpfsNode) error {
 
 	//init miner
 	miner.InitMiner(env.GetEnv("MINER_RPC"))
-	mi := miner.NewMinerEx("MINER_CONTRACT", config.GetChainKey())
+	mi := miner.NewMinerEx(env.GetEnv("MINER_CONTRACT"), config.GetChainPrivateKey())
 
 	//set contract addr map
-	mi.SetMap(node.Identity.String())
+	err := mi.SetMap(node.Identity.String())
+	if err != nil {
+		logrus.Error(err)
+		os.Exit(0)
+	}
 
 	logrus.Debugf("loomAddress: %s", config.GetChainAddress())
 
