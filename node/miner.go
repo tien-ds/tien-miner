@@ -858,10 +858,9 @@ func StartMinerWithNode(ctx context.Context, node *core.IpfsNode) error {
 	err := mi.SetMap(node.Identity.String())
 	if err != nil {
 		logrus.Error(err)
-		os.Exit(0)
 	}
 
-	logrus.Debugf("loomAddress: %s", config.GetChainAddress())
+	logrus.Debugf("Address: %s", config.GetChainAddress())
 
 	ws := NewWsClient(ctx, p2p, peerId, msg, mi)
 	//set node
