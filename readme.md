@@ -18,6 +18,6 @@ CGO_ENABLED=1 GOOS=linux GOARCH=arm64 \
 go build -x -o arm64-miner -tags main github.com/ds/depaas/cmd/miner
 ```
 ## Document 
-[depaas miner docs](wiki)
+[depaas miner docs](https://github.com/tien-ds/tien-miner/wiki)
 # Architecture
 ![Architecture](./docs/me.svg)
