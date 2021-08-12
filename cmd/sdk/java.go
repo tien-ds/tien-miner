@@ -6,6 +6,7 @@ package main
 import "C"
 import (
 	"gitee.com/aifuturewell/gojni/java"
+	"github.com/ds/depaas/crypto"
 )
 
 func main() {
