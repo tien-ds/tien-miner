@@ -22,6 +22,15 @@ func GenRand() string {
 	return fmt.Sprintf("%d", r.Uint64())
 }
 
+func GetConfigDir() string {
+	dir, _ := os.UserHomeDir()
+	repoPath := path.Join(path.Join(dir, ".depaas"), "config")
+	if !Exist(repoPath) {
+		os.MkdirAll(repoPath, 0777)
+	}
+	return repoPath
+}
+
 func GetContextDir(name string) string {
 	repoPath := path.Join(BestPoolPath(), name)
 	if !Exist(repoPath) {

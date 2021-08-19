@@ -5,7 +5,6 @@ import (
 	"github.com/ds/depaas/utils"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/sirupsen/logrus"
-	"os"
 	"path"
 )
 
@@ -20,7 +19,7 @@ func GetDBPath() string {
 }
 
 func initDatabase() {
-	dir := utils.GetContextDir(os.Getenv("repo"))
+	dir := utils.GetConfigDir()
 	appDb = path.Join(dir, "app.db")
 	if !utils.Exist(appDb) {
 		logrus.Tracef("create db %s", appDb)

@@ -7,6 +7,6 @@ import (
 )
 
 func TestIpfs(t *testing.T) {
-	GwInit()
+
 	api.StartService(":8066")
 }

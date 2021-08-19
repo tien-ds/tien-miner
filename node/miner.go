@@ -14,16 +14,15 @@ import (
 	service2 "github.com/ds/depaas/ipds/service"
 	"github.com/ds/depaas/node/bee"
 	"github.com/ds/depaas/node/chia"
+	"github.com/ds/depaas/node/diskm"
 	"github.com/ds/depaas/node/env"
 	nutils "github.com/ds/depaas/node/utils"
 	"github.com/ds/depaas/protocol"
 	"github.com/ds/depaas/utils"
-	"github.com/dustin/go-humanize"
 	"github.com/gorilla/websocket"
 	"github.com/ipfs/go-cid"
 	cmds "github.com/ipfs/go-ipfs-cmds"
 	oldcmds "github.com/ipfs/go-ipfs/commands"
-	"github.com/ipfs/go-ipfs/core"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
@@ -175,26 +174,27 @@ const (
 )
 
 func diskTotalSpace() (float64, []disk.PartitionStat) {
-	var totalSpace uint64 = 0
+	//var totalSpace uint64 = 0
 	//distInfos, _ := disk.Partitions(false)
 	//for _, info := range distInfos {
 	//	//data, _ := json.MarshalIndent(info, "", "  ")
 	//	if info.Device == "/dev/loop0" {
 	//		continue
 	//	}
-	//	diskinfo, err := disk.Usage(string(info.Mountpoint))
-	//	if err != nil {
-	//		logrus.Debug("diskTotalSpace err:", err)
-	//		continue
-	//	}
+	diskinfo, err := disk.Usage(diskm.DS_DIR)
+	if err != nil {
+		logrus.Debug("diskTotalSpace err:", err)
+		return 0, nil
+	}
+	return float64(diskinfo.Total) / 1000000000, nil
 	//	totalSpace += diskinfo.Total
 	//	//infodata, _ := json.MarshalIndent(diskinfo, "", "  ")
 	//	//logrus.Debug("data:", string(data), ",infodata:", string(infodata))
 	//}
-	c, _ := ipds.GetNode().Repo.Config()
-	parseBytes, _ := humanize.ParseBytes(c.Datastore.StorageMax)
-	logrus.Debug("diskTotalSpace totalSpace:", humanize.Bytes(totalSpace))
-	return float64(parseBytes) / 1000000000, nil
+	//c, _ := ipds.GetNode().Repo.Config()
+	//parseBytes, _ := humanize.ParseBytes(c.Datastore.StorageMax)
+	//logrus.Debug("diskTotalSpace totalSpace:", humanize.Bytes(totalSpace))
+	//return float64(totalSpace) / 1000000000, nil
 }
 
 func (ws *NodeContext) machineInfo() protocol.InfoType {
@@ -561,6 +561,10 @@ func (ws *NodeContext) run() error {
 	done := make(chan struct{})
 	go ws.loopMsg(c, done)
 
+	if ipds.GetNode() == nil {
+		return errors.New("node nil maybe wait for mount")
+	}
+
 	//miner startup run
 	ws.runOnce()
 
@@ -837,7 +841,8 @@ func NewWsClient(ctx context.Context, p2p string, peerId string, msg chan int, m
 	}
 }
 
-func StartMinerWithNode(ctx context.Context, node *core.IpfsNode) error {
+// StartMinerWithNode this method will wait for loop
+func StartMinerWithNode(ctx context.Context) error {
 	peerId := ipds.GetPeerID()
 	logrus.Infof("peerID %s", peerId)
 
@@ -850,12 +855,12 @@ func StartMinerWithNode(ctx context.Context, node *core.IpfsNode) error {
 	//	StartApi("http://127.0.0.1", msg)
 	//}()
 
-	//init miner
+	//init contract miner
 	miner.InitMiner(env.GetEnv("MINER_RPC"))
 	mi := miner.NewMinerEx(env.GetEnv("MINER_CONTRACT"), config.GetChainPrivateKey())
 
 	//set contract addr map
-	err := mi.SetMap(node.Identity.String())
+	err := mi.SetMap(peerId)
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -866,9 +871,7 @@ func StartMinerWithNode(ctx context.Context, node *core.IpfsNode) error {
 	//set node
 	SetNodeContext(ws)
 
-	go ws.StartLoop()
-
-	return nil
+	return ws.StartLoop()
 }
 
 func StartMiner(req *cmds.Request, ctx *oldcmds.Context) error {
@@ -878,5 +881,5 @@ func StartMiner(req *cmds.Request, ctx *oldcmds.Context) error {
 		return err
 	}
 	ipds.SetNode(node)
-	return StartMinerWithNode(req.Context, node)
+	return StartMinerWithNode(req.Context)
 }

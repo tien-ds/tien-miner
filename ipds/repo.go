@@ -14,7 +14,6 @@ import (
 	filestore "github.com/ipfs/go-filestore"
 	keystore "github.com/ipfs/go-ipfs/keystore"
 	repo "github.com/ipfs/go-ipfs/repo"
-	mfsr "github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
 	dir "github.com/ipfs/go-ipfs/thirdparty/dir"
 
 	ds "github.com/ipfs/go-datastore"
@@ -81,27 +80,25 @@ type PriRepo struct {
 	path string
 	// lockfile is the file system lock to prevent others from opening
 	// the same fsrepo path concurrently
-	lockfile io.Closer
-	config   *config.Config
-	ds       repo.Datastore
-	keystore keystore.Keystore
-	filemgr  *filestore.FileManager
+	lockfile  io.Closer
+	configDir string
+	config    *config.Config
+	ds        repo.Datastore
+	keystore  keystore.Keystore
+	filemgr   *filestore.FileManager
 }
 
 var _ repo.Repo = (*PriRepo)(nil)
 
-func OpenRepo(repoPath string) (repo.Repo, error) {
-	fn := func() (repo.Repo, error) {
-		return open(repoPath)
-	}
-	return onlyOne.Open(repoPath, fn)
+func OpenRepo(repoPath string, configDir string) (repo.Repo, error) {
+	return open(repoPath, configDir)
 }
 
-func open(repoPath string) (repo.Repo, error) {
+func open(repoPath string, configDir string) (repo.Repo, error) {
 	packageLock.Lock()
 	defer packageLock.Unlock()
 
-	r, err := newFSRepo(repoPath)
+	r, err := newFSRepo(repoPath, configDir)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +108,7 @@ func open(repoPath string) (repo.Repo, error) {
 		return nil, err
 	}
 
-	r.lockfile, err = lockfile.Lock(r.path, LockFile)
+	r.lockfile, err = lockfile.Lock(r.configDir, LockFile)
 	if err != nil {
 		return nil, err
 	}
@@ -166,13 +163,13 @@ func open(repoPath string) (repo.Repo, error) {
 	return r, nil
 }
 
-func newFSRepo(rpath string) (*PriRepo, error) {
+func newFSRepo(rpath string, configDir string) (*PriRepo, error) {
 	expPath, err := homedir.Expand(filepath.Clean(rpath))
 	if err != nil {
 		return nil, err
 	}
 
-	return &PriRepo{path: expPath}, nil
+	return &PriRepo{path: expPath, configDir: configDir}, nil
 }
 
 func checkInitialized(path string) error {
@@ -186,7 +183,7 @@ func configIsInitialized() bool {
 	return nconf.GetDSConfig() != ""
 }
 
-func initConfig(conf *config.Config) error {
+func genConfig(conf *config.Config) error {
 	if configIsInitialized() {
 		return nil
 	}
@@ -197,7 +194,7 @@ func initConfig(conf *config.Config) error {
 	return nconf.SetDSConfig(string(bytes))
 }
 
-func DSInit(repoPath string, conf *config.Config) error {
+func DSInitConfig(conf *config.Config) error {
 
 	packageLock.Lock()
 	defer packageLock.Unlock()
@@ -206,7 +203,7 @@ func DSInit(repoPath string, conf *config.Config) error {
 		return nil
 	}
 
-	if err := initConfig(conf); err != nil {
+	if err := genConfig(conf); err != nil {
 		return err
 	}
 
@@ -214,9 +211,9 @@ func DSInit(repoPath string, conf *config.Config) error {
 	//	return err
 	//}
 
-	if err := mfsr.RepoPath(repoPath).WriteVersion(RepoVersion); err != nil {
-		return err
-	}
+	//if err := mfsr.RepoPath(repoPath).WriteVersion(RepoVersion); err != nil {
+	//	return err
+	//}
 
 	return nil
 }
@@ -382,7 +379,7 @@ var _ repo.Repo = &PriRepo{}
 // IsInitialized returns true if the repo is initialized at provided |path|.
 func IsInitialized() bool {
 	// packageLock is held to ensure that another caller doesn't attempt to
-	// Init or Remove the repo while this call is in progress.
+	// GenConfig or Remove the repo while this call is in progress.
 	packageLock.Lock()
 	defer packageLock.Unlock()
 

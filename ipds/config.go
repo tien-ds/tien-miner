@@ -15,7 +15,7 @@ import (
 	peer "github.com/libp2p/go-libp2p-core/peer"
 )
 
-func Init(out io.Writer, nBitsForKeypair int) (*config.Config, error) {
+func GenConfig(out io.Writer, nBitsForKeypair int) (*config.Config, error) {
 	identity, err := CreateIdentity(out, []options.KeyGenerateOption{
 		options.Key.Size(nBitsForKeypair),
 		options.Key.Type(options.Ed25519Key),

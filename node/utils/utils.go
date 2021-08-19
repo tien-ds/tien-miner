@@ -34,13 +34,6 @@ func SetLog() {
 	})
 }
 
-func MountDSDisk() {
-	if GetDsType() == 2 {
-		postRet, err := HttpPostClient("http://127.0.0.1:9999/cmd", []byte("[[\"/root/.local/mount.sh\",\"mount\"]]"))
-		logrus.Debug("main postRet:", postRet, ",err:", err)
-	}
-}
-
 func HttpPostClient(url string, query []byte) ([]byte, error) {
 	client := new(http.Client)
 	reader := bytes.NewReader(query)

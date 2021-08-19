@@ -95,7 +95,7 @@ func main() {
 	}
 
 	go utils.Shutdown(func() {
-		closer.Close()
+		closer.CloseAll()
 	})
 	api.PackApi()
 	logrus.Infof("listen %s", *serverAddr)

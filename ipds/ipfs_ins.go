@@ -2,9 +2,11 @@ package ipds
 
 import (
 	"context"
+	"encoding/json"
+	"github.com/ds/depaas/database/config"
 	"github.com/ipfs/go-cid"
+	iconf "github.com/ipfs/go-ipfs-config"
 	"github.com/ipfs/go-ipfs/core"
-	"github.com/ipfs/go-ipfs/core/commands/keyencode"
 	"github.com/ipfs/go-ipfs/core/coreapi"
 	coreiface "github.com/ipfs/interface-go-ipfs-core"
 	"github.com/ipfs/interface-go-ipfs-core/path"
@@ -14,12 +16,17 @@ import (
 var mNode *core.IpfsNode
 
 func GetPeerID() string {
-	//mNode.Identity
-	encoder, err := keyencode.KeyEncoderFromString("b58mh")
-	if err != nil {
-		return ""
+	return GetConfig().Identity.PeerID
+}
+
+func GetConfig() *iconf.Config {
+	dsConfig := config.GetDSConfig()
+	var dsConf iconf.Config
+	err := json.Unmarshal([]byte(dsConfig), &dsConf)
+	if err == nil {
+		return &dsConf
 	}
-	return encoder.FormatID(mNode.Identity)
+	return nil
 }
 
 func SetNode(node *core.IpfsNode) {

@@ -16,9 +16,28 @@ func RegisterCloser(name string, closer2 io.Closer) error {
 	return nil
 }
 
-func Close() {
+func CloseAll() {
 	for name, close := range closer {
-		close.Close()
-		logrus.Infof("close %s success", name)
+		err := close.Close()
+		if err != nil {
+			logrus.Errorf("close %s err %s", name, err)
+		} else {
+			logrus.Infof("close %s success", name)
+		}
 	}
+}
+
+type SimpleCloser struct {
+	f func() error
+}
+
+func (s SimpleCloser) Close() error {
+	if s.f != nil {
+		return s.f()
+	}
+	return nil
+}
+
+func NewSimpleCloser(f func() error) SimpleCloser {
+	return SimpleCloser{f: f}
 }
