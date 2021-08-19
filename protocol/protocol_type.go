@@ -57,6 +57,7 @@ const (
 	WIFI_KEY_PAIR     MSG = 24
 	CHIA_INFO         MSG = 30
 	CHIA_INFO_CODE    MSG = 31
+	MESSAGE           MSG = 33
 	BEE_INFO          MSG = 40
 	BEE_CMD_CODE      MSG = 42
 	BLOCK_CHECK       MSG = 43
@@ -135,6 +136,14 @@ type Miner struct {
 	PeerID    string `json:"peerId"`
 	Addr      string `json:"addr" db:"index"`
 	MinerAddr string `json:"minerAddr"`
+}
+
+// Message type 33
+type Message struct {
+	MsgType
+	SType string `json:"sType"`
+	State int    `json:"state"`
+	MSG   string `json:"msg"`
 }
 
 type Param struct {

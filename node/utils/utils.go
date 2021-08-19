@@ -2,7 +2,6 @@ package utils
 
 import (
 	"bytes"
-	"github.com/ds/depaas/node/env"
 	"github.com/ds/depaas/protocol"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -10,29 +9,6 @@ import (
 	"os"
 	"strconv"
 )
-
-func SetLog() {
-	logrus.SetOutput(os.Stdout)
-	log := env.GetEnv("LOG")
-	switch log {
-	case "info":
-		logrus.SetLevel(logrus.InfoLevel)
-	case "debug":
-		logrus.SetLevel(logrus.DebugLevel)
-	case "trace":
-		logrus.SetLevel(logrus.TraceLevel)
-	case "error":
-		logrus.SetLevel(logrus.ErrorLevel)
-	case "warn":
-		logrus.SetLevel(logrus.WarnLevel)
-	default:
-		logrus.SetLevel(logrus.InfoLevel)
-	}
-	logrus.SetFormatter(&logrus.TextFormatter{
-		ForceColors:   true,
-		FullTimestamp: true,
-	})
-}
 
 func HttpPostClient(url string, query []byte) ([]byte, error) {
 	client := new(http.Client)

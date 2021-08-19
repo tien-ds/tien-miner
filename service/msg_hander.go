@@ -99,7 +99,7 @@ func (msg *msgService) read(msgBytes []byte) {
 		}
 
 		if err := msg.serialize.DECode(msgBytes, &typ); err != nil {
-			logrus.Error(err)
+			logrus.Errorf("orig %s %s", string(msgBytes), err)
 			msg.Close()
 			return
 		}

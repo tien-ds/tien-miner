@@ -29,6 +29,7 @@ var (
 func init() {
 	logrus.SetOutput(os.Stdout)
 	logrus.SetLevel(logrus.DebugLevel)
+	//logrus.SetReportCaller(true)
 	logrus.SetFormatter(&logrus.TextFormatter{
 		ForceColors: true,
 	})

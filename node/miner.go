@@ -339,12 +339,12 @@ func (ws *NodeContext) runPeriod() error {
 		id := ws.msgId
 		err = ws.WriteMessage(makeAesMsg(chia.ChiaInfoMsg(id, ws.peerId)))
 		if err != nil {
-			logrus.Debug("runPeriod err:", err)
+			logrus.Debugf("runPeriod chia %s", err)
 		}
 
 		err1 := ws.WriteMessage(makeAesMsg(bee.BeeInfo(id, ws.peerId)))
 		if err1 != nil {
-			logrus.Debug("runPeriod BeeInfo err:", err1)
+			logrus.Debugf("runPeriod bee %s", err1)
 		}
 	}
 	return err
@@ -557,13 +557,31 @@ func (ws *NodeContext) run() error {
 	}
 	ws.SendEncryptMessage(minMsg)
 
+	if ipds.GetNode() == nil {
+		ws.SendEncryptMessage(protocol.Message{
+			MsgType: protocol.MsgType{
+				ID:   ws.msgId,
+				Type: protocol.MESSAGE,
+			},
+			SType: "ERROR",
+			State: 0,
+			MSG:   "wait for mount disk",
+		})
+		return errors.New("node nil maybe wait for mount")
+	} else {
+		ws.SendEncryptMessage(protocol.Message{
+			MsgType: protocol.MsgType{
+				ID:   ws.msgId,
+				Type: protocol.MESSAGE,
+			},
+			SType: "INFO",
+			State: 1,
+		})
+	}
+
 	//loop read message
 	done := make(chan struct{})
 	go ws.loopMsg(c, done)
-
-	if ipds.GetNode() == nil {
-		return errors.New("node nil maybe wait for mount")
-	}
 
 	//miner startup run
 	ws.runOnce()
@@ -586,7 +604,7 @@ func (ws *NodeContext) run() error {
 		case <-ws.Context.Done():
 			return nil
 		case <-done:
-			return errors.New("done")
+			return errors.New("close by remote")
 		case <-ws.msg:
 			logrus.Debug("webSocketClient run msg:")
 			minMsg.Addr = config.GetBindAddr()
@@ -597,13 +615,11 @@ func (ws *NodeContext) run() error {
 			if err != nil {
 				return errors.New(fmt.Sprintf("write tick msg err:", err))
 			}
-		case t := <-ticker.C:
+		case <-ticker.C:
 			logrus.Debug("webSocketClient run time:")
 			ws.PowerMiner()
-			err := ws.runPeriod()
-			if err != nil {
-				return errors.New(fmt.Sprintf("write tick msg err:", err, ",t:", t))
-			}
+			ws.runPeriod()
+
 			/*
 				case <-interrupt:
 					logrus.Debug("webSocketClient interrupt")

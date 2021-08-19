@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"github.com/ds/depaas/node/env"
 	"github.com/sirupsen/logrus"
 	"math/rand"
 	"net"
@@ -92,4 +93,27 @@ func RandArray(times, len int) []int {
 		rs = append(rs, rand.Intn(len))
 	}
 	return rs
+}
+
+func SetLog() {
+	logrus.SetOutput(os.Stdout)
+	log := env.GetEnv("LOG")
+	switch log {
+	case "info":
+		logrus.SetLevel(logrus.InfoLevel)
+	case "debug":
+		logrus.SetLevel(logrus.DebugLevel)
+	case "trace":
+		logrus.SetLevel(logrus.TraceLevel)
+	case "error":
+		logrus.SetLevel(logrus.ErrorLevel)
+	case "warn":
+		logrus.SetLevel(logrus.WarnLevel)
+	default:
+		logrus.SetLevel(logrus.InfoLevel)
+	}
+	logrus.SetFormatter(&logrus.TextFormatter{
+		ForceColors:   true,
+		FullTimestamp: true,
+	})
 }

@@ -102,4 +102,10 @@ func Init() {
 		peerId := msgWriter.GetValue("peerId")
 		service.CheckBlocks(result.Cid, peerId)
 	})
+
+	service.RegisterMsgType(protocol.MESSAGE, reflect.TypeOf((*protocol.Message)(nil)).Elem(), func(msgWriter protocol.MsgWriter, v interface{}) {
+		msg := v.(*protocol.Message)
+		peerId := msgWriter.GetValue("peerId")
+		logrus.Infof("%s msg %s", peerId, msg.MSG)
+	})
 }

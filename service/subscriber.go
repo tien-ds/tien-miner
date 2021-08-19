@@ -74,6 +74,12 @@ func SubscribesInit() {
 		do(id, v)
 	})
 
+	//
+	pools.MsPool().Register(protocol.MESSAGE.String(), func(id string, f interface{}) {
+		v, _ := json.Marshal(f)
+		do(id, v)
+	})
+
 	pools.MsPool().Register(protocol.CHIA_INFO.String(), func(id string, f interface{}) {
 
 		sum := func(info *protocol.ChiaMinerInfo) *big.Int {
