@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/ds/depaas/utils"
+	"github.com/gorilla/websocket"
 	"reflect"
 	"strings"
 
@@ -19,12 +20,12 @@ func Init() {
 	service.RegisterMsgType(protocol.MINER_PEER, reflect.TypeOf((*protocol.Miner)(nil)).Elem(), func(msgWriter protocol.MsgWriter, v interface{}) {
 		miner := v.(*protocol.Miner)
 		id := msgWriter.GetValue("id")
-		if id != miner.ID {
+		if id == nil && id != miner.ID {
 			logrus.Error("id != miner.ID")
 			msgWriter.Close()
 			return
 		}
-		msgWriter.SendMessage(protocol.HelloOk(id, base64.StdEncoding.EncodeToString(MulAddr())))
+		msgWriter.SendMessage(protocol.HelloOk(id.(string), base64.StdEncoding.EncodeToString(MulAddr())))
 		msgWriter.SetValue("peerId", miner.PeerID)
 		miner.Addr = strings.ToLower(miner.Addr)
 		pools.IdsMangerInstance().AddID(miner.PeerID, *miner)
@@ -50,20 +51,25 @@ func Init() {
 	})
 
 	service.RegisterMsgType(protocol.MINFO, reflect.TypeOf((*protocol.InfoType)(nil)).Elem(), func(msgWriter protocol.MsgWriter, v interface{}) {
+		peerId := msgWriter.GetValue("peerId")
+		if peerId == nil || peerId.(string) == "" {
+			msgWriter.Close()
+			logrus.Trace("not find peerId")
+		}
+
 		info := v.(*protocol.InfoType)
 		ip := info.Ip
 		if ip == "" {
-			ip = msgWriter.GetValue("remoteIp")
+			ip = msgWriter.GetValue("remoteIp").(string)
 		}
 		if utils.IsPortOpen(fmt.Sprintf("%s:18080", ip)) {
 			info.Ip = ip
 		} else {
 			info.Ip = ""
 		}
-		pools.Online().CheckPeer(info.PeerId, func() {
-			logrus.Error("CheckPeer fail")
-			msgWriter.Close()
-		})
+
+		pools.Online().Event(peerId.(string), msgWriter.GetValue("ctx").(*websocket.Conn))
+
 		err := pools.NewMinerInfo().Store(info.PeerId, *info)
 		if err != nil {
 			logrus.Error(err)
@@ -100,7 +106,7 @@ func Init() {
 	service.RegisterMsgType(protocol.BLOCK_CHECK, reflect.TypeOf((*protocol.BlockCheck)(nil)).Elem(), func(msgWriter protocol.MsgWriter, v interface{}) {
 		result := v.(*protocol.BlockCheck)
 		peerId := msgWriter.GetValue("peerId")
-		service.CheckBlocks(result.Cid, peerId)
+		service.CheckBlocks(result.Cid, peerId.(string))
 	})
 
 	service.RegisterMsgType(protocol.MESSAGE, reflect.TypeOf((*protocol.Message)(nil)).Elem(), func(msgWriter protocol.MsgWriter, v interface{}) {

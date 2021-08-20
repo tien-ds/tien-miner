@@ -7,6 +7,7 @@ import (
 	"github.com/ds/depaas/persistence"
 	"github.com/ds/depaas/pools"
 	"github.com/ds/depaas/protocol"
+	"github.com/kr/pretty"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"math/big"
@@ -25,12 +26,12 @@ func toDB() {
 
 func InitFormDB() {
 	v, e := persistence.GetOrigDB().Get([]byte("SUBSCRIBES_DB"))
-	logrus.Info(string(v), e)
 	if e == nil && v != nil {
 		err := json.Unmarshal(v, &subscribes)
 		if err != nil {
 			logrus.Error(err)
 		}
+		logrus.Info(pretty.Sprint(subscribes))
 	}
 	if subscribes == nil {
 		subscribes = make(map[int]string)

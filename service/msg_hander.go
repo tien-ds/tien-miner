@@ -3,17 +3,17 @@ package service
 import (
 	"encoding/base64"
 	"fmt"
-	"net"
-	"reflect"
-	"strconv"
-	"sync"
-	"time"
-
 	"github.com/ds/depaas/pools"
 	"github.com/ds/depaas/protocol"
 	"github.com/ds/depaas/utils"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
+	"net"
+	"reflect"
+	"strconv"
+	"sync"
+	"time"
+	"unicode/utf8"
 )
 
 type msgService struct {
@@ -61,8 +61,21 @@ type ChanMsg struct {
 	close chan bool
 }
 
+var allow = []protocol.MSG{
+	protocol.MESSAGE,
+	protocol.WIFI_KEY_PAIR,
+}
+
+func isAllow(msg protocol.MSG) bool {
+	for _, p := range allow {
+		if p == msg {
+			return true
+		}
+	}
+	return false
+}
+
 func (msg *msgService) read(msgBytes []byte) {
-	logrus.Tracef("read orign message: %s", string(msgBytes))
 	var typ protocol.MsgType
 	if err := msg.serialize.DECode(msgBytes, &typ); err != nil {
 		logrus.Error(err)
@@ -70,40 +83,47 @@ func (msg *msgService) read(msgBytes []byte) {
 		return
 	}
 
-	//aes decode
-	if typ.Type == protocol.AES_ENCRYPT {
-		var aes protocol.AesType
-		err := msg.serialize.DECode(msgBytes, &aes)
-		if err != nil {
-			logrus.Error(err)
-			msg.Close()
-			return
-		}
-
-		encrypted, e := base64.StdEncoding.DecodeString(aes.Msg)
-		if e != nil {
-			msg.Close()
-			return
-		}
-
-		msgBytes = utils.AesDecryptCBC(encrypted, utils.AesPasswd())
-		if msgBytes == nil {
-			logrus.Error("aes origin error")
-			msg.Close()
-			return
-		}
-		logrus.Tracef("read aes message: %s", string(msgBytes))
-		if aes.Type == 0 {
-			msg.Close()
-			return
-		}
-
-		if err := msg.serialize.DECode(msgBytes, &typ); err != nil {
-			logrus.Errorf("orig %s %s", string(msgBytes), err)
-			msg.Close()
-			return
-		}
+	if typ.Type != protocol.AES_ENCRYPT {
+		msg.Close()
+		return
 	}
+
+	var aes protocol.AesType
+	err := msg.serialize.DECode(msgBytes, &aes)
+	if err != nil {
+		logrus.Error(err)
+		msg.Close()
+		return
+	}
+
+	encrypted, e := base64.StdEncoding.DecodeString(aes.Msg)
+	if e != nil {
+		msg.Close()
+		return
+	}
+
+	msgBytes = utils.AesDecryptCBC(encrypted, utils.AesPasswd())
+	if msgBytes == nil {
+		logrus.Trace("aes origin error")
+		msg.Close()
+		return
+	}
+
+	if aes.Type == 0 {
+		msg.Close()
+		return
+	}
+
+	if err := msg.serialize.DECode(msgBytes, &typ); err != nil {
+		s := string(msgBytes)
+		if utf8.ValidString(s) {
+			logrus.Errorf("orig %s %s", string(msgBytes), err)
+		}
+		msg.Close()
+		return
+	}
+
+	logrus.Infof("read orign message: %s", string(msgBytes))
 
 	if typ.Type == protocol.ID_CODE {
 		id := GenId()
@@ -121,19 +141,31 @@ func (msg *msgService) read(msgBytes []byte) {
 		msg.SetValue("remoteIp", host)
 	}
 
+	msg.SetValue("ctx", msg.conn)
+
 	if v, b := codePool[typ.Type]; b {
+		run := true
+		if typ.Type > 4 && !isAllow(typ.Type) {
+			peerId := msg.GetValue("peerId")
+			if peerId == nil || peerId.(string) == "" {
+				msg.Close()
+				return
+			}
+			pools.Online().CheckPeer(peerId.(string), func() {
+				msg.Close()
+				logrus.Tracef("%s peer is offline", peerId)
+				run = false
+			})
+		}
+		if !run {
+			logrus.Tracef("type %s", typ.Type)
+			return
+		}
 		vInf := reflect.New(v.pv)
 		msg.serialize.DECode(msgBytes, vInf.Interface())
 		i := vInf.Interface()
 		v.fun(msg, i)
 		pools.MsPool().PushMsg(i, strconv.Itoa(typ.Type.Int()))
-	}
-
-	peerId := msg.GetValue("peerId")
-	if peerId != "" {
-		pools.Online().Event(peerId, msg.conn)
-	} else {
-		msg.Close()
 	}
 
 }
@@ -144,13 +176,13 @@ func (msg *msgService) requireClosed(err error) {
 	}
 }
 
-func (msg *msgService) SetValue(k, v string) {
+func (msg *msgService) SetValue(k string, v interface{}) {
 	msg.kv.Store(k, v)
 }
 
-func (msg *msgService) GetValue(k string) string {
+func (msg *msgService) GetValue(k string) interface{} {
 	if v, b := msg.kv.Load(k); b && v != nil {
-		return v.(string)
+		return v
 	}
 	return ""
 }
@@ -186,7 +218,7 @@ func (msg *msgService) ReadMessage() {
 		for {
 			select {
 			case <-msg.cMsg.close:
-				logrus.Debug("chan close")
+				logrus.Trace("chan close")
 				msg.conn.Close()
 				goto ForEnd
 			case msgData := <-msg.cMsg.read:
@@ -208,8 +240,8 @@ func (msg *msgService) SendMessage(f interface{}) protocol.MsgResult {
 }
 
 func (msg *msgService) Close() error {
-	peerId := msg.GetValue("peerId")
-	logrus.Debugf("close %s", peerId)
+	peerId := msg.GetValue("peerId").(string)
+	logrus.Tracef("close %s", peerId)
 	msg.isClose = true
 	go func() {
 		msg.cMsg.close <- true

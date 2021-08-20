@@ -329,12 +329,6 @@ func (ws *NodeContext) runPeriod() error {
 		return err
 	}
 
-	//err = ws.WriteMessage(makeAesMsg(peerId, ws.chiaInfo(peerId)))
-	//if err != nil {
-	//	logrus.Debug("runPeriod err:", err)
-	//	return err
-	//}
-
 	if nutils.GetDsType() == protocol.MINER_HOME {
 		id := ws.msgId
 		err = ws.WriteMessage(makeAesMsg(chia.ChiaInfoMsg(id, ws.peerId)))
@@ -537,7 +531,7 @@ func (ws *NodeContext) run() error {
 		MsgType: protocol.MsgType{ID: "122", Type: protocol.ID_CODE},
 		Msg:     "connect",
 	}
-	ws.SendMessage(hello)
+	ws.SendEncryptMessage(hello)
 
 	//wait for peerId
 	ws.msgId = <-msgId
@@ -835,7 +829,7 @@ func (ws *NodeContext) runOnce() {
 		ws.SendEncryptMessage(w)
 
 		//wifi bind
-		bee.BeeInfo("123", ws.peerId)
+		//bee.BeeInfo("123", ws.peerId)
 	}
 
 }

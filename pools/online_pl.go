@@ -26,13 +26,14 @@ func (o *online) Event(key string, conn *websocket.Conn) {
 
 func (o *online) SetOnline(key string, conn *websocket.Conn) {
 	if !o.IsOnLine(key) {
+		logrus.Infof("%s is online", key)
 		SetOnLineHistory(key, true)
 	}
 	o.minerPools.Store(key, conn)
 }
 
-func (o *online) CheckPeer(id string, f func()) {
-	if _, ok := o.minerPools.Load(id); !ok {
+func (o *online) CheckPeer(peer string, f func()) {
+	if _, ok := o.minerPools.Load(peer); !ok {
 		f()
 	}
 }
@@ -50,6 +51,7 @@ func SetOnLineHistory(peer string, is bool) {
 func (o *online) SetOffLine(key string) {
 	if o.IsOnLine(key) {
 		SetOnLineHistory(key, false)
+		logrus.Infof("%s offline", key)
 	}
 	o.minerPools.Delete(key)
 }

@@ -27,12 +27,6 @@ var (
 )
 
 func init() {
-	logrus.SetOutput(os.Stdout)
-	logrus.SetLevel(logrus.DebugLevel)
-	//logrus.SetReportCaller(true)
-	logrus.SetFormatter(&logrus.TextFormatter{
-		ForceColors: true,
-	})
 	rest.InitRest()
 	register.Init()
 
@@ -52,7 +46,6 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	//w.Header().SetOnline("Access-Control-Allow-Headers", "Content-Type")
 	//w.Header().Set("content-type", "text/plain")
 	if websocket.IsWebSocketUpgrade(r) {
-		logrus.Infof("connect %s", r.RemoteAddr)
 		conn, err := upgrade.Upgrade(w, r, nil)
 		if err != nil {
 			logrus.Error(err)
@@ -77,6 +70,8 @@ func InitService() {
 }
 
 func main() {
+	utils.SetLog()
+
 	flag.Parse()
 
 	//set gw ip

@@ -43,8 +43,8 @@ type MessagePool interface {
 }
 
 type KvStore interface {
-	SetValue(k, v string)
-	GetValue(k string) string
+	SetValue(k string, v interface{})
+	GetValue(k string) interface{}
 }
 
 type Serialize interface {
