@@ -26,7 +26,7 @@ func (m *MsgResultEntry) Subscriber(fv func(id string, f interface{})) {
 }
 
 type Msg interface {
-	SendMessage(f interface{}) MsgResult
+	//SendMessage(f interface{}) MsgResult
 	SendEncryptMsg(f interface{}) MsgResult
 }
 

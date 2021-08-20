@@ -45,7 +45,7 @@ func SendMessage(cmd struct {
 				ID:   str.ID,
 				Type: protocol.CMD_SYSTEM,
 			},
-			Cmd:       protocol.CMD(cmd.CMD),
+			Cmd:       cmd.CMD,
 			Version:   0,
 			Signature: "",
 			RandId:    id,

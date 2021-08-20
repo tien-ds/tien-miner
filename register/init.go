@@ -25,7 +25,7 @@ func Init() {
 			msgWriter.Close()
 			return
 		}
-		msgWriter.SendMessage(protocol.HelloOk(id.(string), base64.StdEncoding.EncodeToString(MulAddr())))
+		msgWriter.SendEncryptMsg(protocol.HelloOk(id.(string), base64.StdEncoding.EncodeToString(MulAddr())))
 		msgWriter.SetValue("peerId", miner.PeerID)
 		miner.Addr = strings.ToLower(miner.Addr)
 		pools.IdsMangerInstance().AddID(miner.PeerID, *miner)
@@ -112,6 +112,7 @@ func Init() {
 	service.RegisterMsgType(protocol.MESSAGE, reflect.TypeOf((*protocol.Message)(nil)).Elem(), func(msgWriter protocol.MsgWriter, v interface{}) {
 		msg := v.(*protocol.Message)
 		peerId := msgWriter.GetValue("peerId")
+		msg.PeerID = peerId.(string)
 		logrus.Infof("%s msg %s", peerId, msg.MSG)
 	})
 }

@@ -263,21 +263,21 @@ func statsBw() (error, float64, float64, int64, int64, uint64) {
 	return nil, bw.RateIn, bw.RateOut, bw.TotalIn, bw.TotalOut, size.RepoSize
 }
 
-func (ws *NodeContext) processCMDMsg(msg protocol.SendEntry, id string) ([]byte, error) {
+func (ws *NodeContext) processCMDMsg(msg protocol.SendEntry, id string) error {
 	var err error
 	var res string
 	if len(msg.Params) == 0 {
-		return nil, errors.New("param == 0")
+		return errors.New("param == 0")
 	}
 	param := msg.Params[0]
 	if param.Key != "arg" {
-		return nil, errors.New("param key error")
+		return errors.New("param key error")
 	}
 	cidValue := param.Value
 	cid, err := cid.Decode(cidValue)
 	if err != nil {
 		logrus.Error(err)
-		return nil, err
+		return err
 	}
 	switch msg.Cmd {
 	case protocol.PINADD:
@@ -294,9 +294,10 @@ func (ws *NodeContext) processCMDMsg(msg protocol.SendEntry, id string) ([]byte,
 		}
 	default:
 		logrus.Error("processCMDMsg cmd err msg.Cmd:", msg.Cmd)
-		return nil, err
+		return err
 	}
-	ret := protocol.ResultType{
+
+	resultType := protocol.ResultType{
 		MsgType: protocol.MsgType{
 			ID:   id,
 			Type: protocol.CMD_SYSTEM_RESP,
@@ -304,13 +305,12 @@ func (ws *NodeContext) processCMDMsg(msg protocol.SendEntry, id string) ([]byte,
 		RandID: msg.RandId,
 	}
 	if err != nil {
-		ret.Error = err.Error()
-	} else {
-		ret.Error = ""
+		resultType.Error = err.Error()
 	}
-	ret.Result = res
-	str, err := json.Marshal(ret)
-	return str, err
+	if res != "" {
+		resultType.Result = res
+	}
+	return ws.SendEncryptMessage(resultType)
 }
 
 func (ws *NodeContext) WriteMessage(data []byte) error {
@@ -354,15 +354,15 @@ func (ws *NodeContext) SendEncryptMessage(f interface{}) error {
 	return ws.WriteMessage(makeAesMsg(data))
 }
 
-func (ws *NodeContext) SendMessage(f interface{}) error {
-	data, e := json.Marshal(f)
-	if e != nil {
-		logrus.Error(e)
-		return e
-	}
-	logrus.Debug("SendMessage ", string(data))
-	return ws.WriteMessage(data)
-}
+//func (ws *NodeContext) SendMessage(f interface{}) error {
+//	data, e := json.Marshal(f)
+//	if e != nil {
+//		logrus.Error(e)
+//		return e
+//	}
+//	logrus.Debug("SendMessage ", string(data))
+//	return ws.WriteMessage(data)
+//}
 
 func (ws *NodeContext) CloseConn() {
 	if ws.conn != nil {
@@ -797,18 +797,7 @@ func (ws *NodeContext) loopMsg(c *websocket.Conn, done chan struct{}) {
 				logrus.Debug("webSocketRun enterData Unmarshal:", err, ",message:", message, ",str:", string(message))
 				continue
 			}
-
-			result, err := ws.processCMDMsg(enterData, data.ID)
-			if err != nil {
-				logrus.Errorf("processCMDMsg %s", err)
-				continue
-			}
-
-			err = ws.WriteMessage(result)
-			if err != nil {
-				break
-			}
-			logrus.Tracef("WriteMessage %s", string(result))
+			ws.processCMDMsg(enterData, data.ID)
 		}
 	}
 }

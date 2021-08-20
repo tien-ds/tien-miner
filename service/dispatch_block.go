@@ -47,6 +47,8 @@ func ReceiveCid(cid cid.Cid) {
 			logrus.Infof("block %s in %s ", block.Block.String(), ser3)
 			DispatchBlock(block.Block, ser3)
 		}
+	} else {
+		DispatchBlock(cid, online2)
 	}
 	//云矿机2份
 	SaveTimesType1 := 2

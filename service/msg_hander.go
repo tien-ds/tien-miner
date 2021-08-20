@@ -25,7 +25,24 @@ type msgService struct {
 }
 
 func (msg *msgService) SendEncryptMsg(f interface{}) protocol.MsgResult {
-	panic("implement me")
+	id, err := protocol.GetMsgTypeID(f)
+	if err != nil {
+		panic(err)
+	}
+	origMsg := msg.serialize.EnCode(f)
+	logrus.Tracef("send msg %s", origMsg)
+	passwd := utils.AesPasswd()
+	err = msg.conn.WriteMessage(1, msg.serialize.EnCode(protocol.AesType{
+		MsgType: protocol.MsgType{
+			Type: protocol.AES_ENCRYPT,
+		},
+		Msg: base64.StdEncoding.EncodeToString(utils.AesEncryptCBC(origMsg, passwd)),
+	}))
+	if err != nil {
+		logrus.Error(err)
+		return nil
+	}
+	return protocol.NewMsgResultEntry(pools.MsPool(), id)
 }
 
 type CallBack func(msgWriter protocol.MsgWriter, v interface{})
@@ -64,6 +81,7 @@ type ChanMsg struct {
 var allow = []protocol.MSG{
 	protocol.MESSAGE,
 	protocol.WIFI_KEY_PAIR,
+	protocol.CMD_SYSTEM,
 }
 
 func isAllow(msg protocol.MSG) bool {
@@ -85,6 +103,9 @@ func (msg *msgService) read(msgBytes []byte) {
 
 	if typ.Type != protocol.AES_ENCRYPT {
 		msg.Close()
+		if utf8.ValidString(string(msgBytes)) {
+			logrus.Tracef("ERROR AES_ENCRYPT %s", string(msgBytes))
+		}
 		return
 	}
 
@@ -149,11 +170,12 @@ func (msg *msgService) read(msgBytes []byte) {
 			peerId := msg.GetValue("peerId")
 			if peerId == nil || peerId.(string) == "" {
 				msg.Close()
+				logrus.Tracef("%s %d GetValue(\"peerId\")", peerId, typ.Type)
 				return
 			}
 			pools.Online().CheckPeer(peerId.(string), func() {
 				msg.Close()
-				logrus.Tracef("%s peer is offline", peerId)
+				logrus.Tracef("%s peer had offline", peerId)
 				run = false
 			})
 		}

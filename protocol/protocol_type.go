@@ -141,9 +141,10 @@ type Miner struct {
 // Message type 33
 type Message struct {
 	MsgType
-	SType string `json:"sType"`
-	State int    `json:"state"`
-	MSG   string `json:"msg"`
+	SType  string `json:"sType"`
+	State  int    `json:"state"`
+	MSG    string `json:"msg"`
+	PeerID string `json:"peerId"`
 }
 
 type Param struct {
