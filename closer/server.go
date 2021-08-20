@@ -16,6 +16,12 @@ func RegisterCloser(name string, closer2 io.Closer) error {
 	return nil
 }
 
+func CloseWithName(name string) {
+	if v, b := closer[name]; b {
+		v.Close()
+	}
+}
+
 func CloseAll() {
 	for name, close := range closer {
 		err := close.Close()

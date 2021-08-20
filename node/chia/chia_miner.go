@@ -1,7 +1,6 @@
 package chia
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/ds/depaas/protocol"
 	"io/ioutil"
@@ -94,7 +93,7 @@ func ListPlots(dirPth string) (plots []PlotStruct, err error) {
 	return plots, nil
 }
 
-func ChiaInfoMsg(id string, peerId string) []byte {
+func ChiaInfoMsg(id string, peerId string) ChiaMinerInfo {
 	plots, _ := ListPlots("/media/root/ds/plots")
 
 	logrus.Debug("ChiaInfoMsg plots:", plots)
@@ -108,9 +107,5 @@ func ChiaInfoMsg(id string, peerId string) []byte {
 		p, _ := ListPlots(fmt.Sprintf("/media/root/chia%d/plots", i))
 		info.Plots = append(info.Plots, p...)
 	}
-
-	logrus.Debug("ChiaInfoMsg info:", info)
-	data, _ := json.Marshal(info)
-	logrus.Debug("ChiaInfoMsg data", string(data))
-	return data
+	return info
 }

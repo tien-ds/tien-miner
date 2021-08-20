@@ -79,7 +79,7 @@ type BeeStruct struct {
 	} `json:"chequebook"`
 }
 
-func BeeInfo(id string, peerId string) []byte {
+func BeeInfo(id string, peerId string) map[string]interface{} {
 	if !utils.IsPortOpen(":1635") {
 		logrus.Warn("bzz not start!")
 		return nil
@@ -96,7 +96,6 @@ func BeeInfo(id string, peerId string) []byte {
 		wifiName := "DS" + mac[4:]
 		ret["name"] = wifiName
 	}
-
 	data, err := beeClient("http://localhost:1635/addresses")
 	if err == nil {
 		value, _ := jsonparser.GetString(data, "ethereum")
@@ -107,7 +106,6 @@ func BeeInfo(id string, peerId string) []byte {
 		ret["address"] = ""
 		ret["peer"] = ""
 	}
-
 	data, err = beeClient("http://localhost:1635/chequebook/balance")
 	if err == nil {
 		value, _ := jsonparser.GetInt(data, "totalBalance")
@@ -115,23 +113,18 @@ func BeeInfo(id string, peerId string) []byte {
 	} else {
 		ret["totalBalance"] = 0
 	}
-
 	var chequebook ChequebookStruct
 	data, err = beeClient("http://localhost:1635/chequebook/cheque")
 	if err == nil {
 		err = json.Unmarshal(data, &chequebook)
 	}
-
 	if err == nil {
 		ret["chequebook"] = chequebook.Chequebook
 	} else {
 		ret["chequebook"] = make([]interface{}, 0)
 	}
 
-	infodata, _ := json.Marshal(ret)
-	logrus.Debug("ret:", string(infodata))
-
-	return infodata
+	return ret
 }
 
 func MakeERC20TransferData(toAddress string, amount *big.Int) ([]byte, error) {

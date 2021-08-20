@@ -75,9 +75,7 @@ func (ws *NodeContext) echoError(err error) error {
 		logrus.Debug("run err:", err)
 		info["text"] = "error:" + err.Error()
 	}
-
-	data, _ := json.Marshal(info)
-	return ws.WriteMessage(makeAesMsg(data))
+	return ws.SendEncryptMessage(info)
 }
 
 func (ws *NodeContext) runShellCmd(params []string) error {
@@ -331,15 +329,8 @@ func (ws *NodeContext) runPeriod() error {
 
 	if nutils.GetDsType() == protocol.MINER_HOME {
 		id := ws.msgId
-		err = ws.WriteMessage(makeAesMsg(chia.ChiaInfoMsg(id, ws.peerId)))
-		if err != nil {
-			logrus.Debugf("runPeriod chia %s", err)
-		}
-
-		err1 := ws.WriteMessage(makeAesMsg(bee.BeeInfo(id, ws.peerId)))
-		if err1 != nil {
-			logrus.Debugf("runPeriod bee %s", err1)
-		}
+		ws.SendEncryptMessage(chia.ChiaInfoMsg(id, ws.peerId))
+		ws.SendEncryptMessage(bee.BeeInfo(id, ws.peerId))
 	}
 	return err
 }
@@ -416,10 +407,7 @@ func (ws *NodeContext) updateEcho(id string, code int) error {
 	ret.ID = id
 	ret.Type = 23
 	ret.Code = code
-
-	bytesData, _ := json.Marshal(ret)
-	logrus.Debug("updateEcho peerId:", id, ",bytesData:", string(bytesData))
-	return ws.WriteMessage(makeAesMsg(bytesData))
+	return ws.SendEncryptMessage(ret)
 }
 
 func (ws *NodeContext) update(data []byte) error {
@@ -604,8 +592,7 @@ func (ws *NodeContext) run() error {
 			minMsg.Addr = config.GetBindAddr()
 			minMsg.MinerAddr = config.GetChainAddress()
 			minMsg.Type = 16
-			minmsgData, _ := json.Marshal(minMsg)
-			err = ws.WriteMessage(makeAesMsg(minmsgData))
+			err = ws.SendEncryptMessage(minMsg)
 			if err != nil {
 				return errors.New(fmt.Sprintf("write tick msg err:", err))
 			}
@@ -723,9 +710,7 @@ func (ws *NodeContext) loopMsg(c *websocket.Conn, done chan struct{}) {
 			} else {
 				info["mnemonic"] = ws.mnemonic
 			}
-
-			result, _ := json.Marshal(info)
-			err = ws.WriteMessage(makeAesMsg(result))
+			err = ws.SendEncryptMessage(info)
 			if err != nil {
 				break
 			}
@@ -734,11 +719,11 @@ func (ws *NodeContext) loopMsg(c *websocket.Conn, done chan struct{}) {
 				break
 			}
 		case protocol.CHIA_INFO_CODE:
-			err = ws.WriteMessage(makeAesMsg(chia.ChiaInfoMsg(data.ID, ws.peerId)))
+			err = ws.SendEncryptMessage(chia.ChiaInfoMsg(data.ID, ws.peerId))
 			if err != nil {
 				break
 			}
-			err = ws.WriteMessage(makeAesMsg(bee.BeeInfo(data.ID, ws.peerId)))
+			err = ws.SendEncryptMessage(bee.BeeInfo(data.ID, ws.peerId))
 			if err != nil {
 				logrus.Debug("runPeriod BeeInfo err:", err)
 			}
@@ -769,10 +754,7 @@ func (ws *NodeContext) loopMsg(c *websocket.Conn, done chan struct{}) {
 					result["type"] = protocol.CMD_RESP_FAIL
 					result["text"] = err.Error()
 				}
-
-				data, err := json.Marshal(result)
-				logrus.Debug("webSocketRun 50 data:", string(data), ",cmd.Cmd:", cmd.Cmd)
-				err = ws.WriteMessage(makeAesMsg(data))
+				err = ws.SendEncryptMessage(result)
 				if err != nil {
 					break
 				}
@@ -783,10 +765,7 @@ func (ws *NodeContext) loopMsg(c *websocket.Conn, done chan struct{}) {
 			key.Type = 51
 			key.Key = config.GetChainPrivateKey()
 			key.Address = config.GetChainAddress()
-
-			logrus.Debug("CmderPrikey BeeInfo key.Address:", key.Address)
-			keydata, _ := json.Marshal(&key)
-			err = ws.WriteMessage(makeAesMsg(keydata))
+			err = ws.SendEncryptMessage(key)
 			if err != nil {
 				logrus.Debug("runPeriod BeeInfo err:", err)
 			}

@@ -88,6 +88,8 @@ func diskInfo(e netlink.UEvent) {
 		devName := e.Env["DEVNAME"]
 		logrus.Infof("%s %s %s %s", e.Action.String(), devType, devName, fsType)
 		if e.Action.String() == "remove" && devName == dev {
+			closer.CloseWithName("config.db")
+			closer.CloseWithName("udev")
 			os.Exit(0)
 		}
 	}
