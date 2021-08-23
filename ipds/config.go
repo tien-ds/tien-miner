@@ -1,7 +1,6 @@
 package ipds
 
 import (
-	"crypto/rand"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -230,7 +229,7 @@ func CreateIdentity(out io.Writer, opts []options.KeyGenerateOption) (config.Ide
 		pk = pub
 	case "ed25519":
 		fmt.Fprintf(out, "generating ED25519 keypair...")
-		priv, pub, err := ci.GenerateEd25519Key(rand.Reader)
+		priv, pub, err := ci.GenerateEd25519Key(nil)
 		if err != nil {
 			return ident, err
 		}
