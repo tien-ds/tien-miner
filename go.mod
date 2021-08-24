@@ -10,6 +10,7 @@ require (
 	github.com/btcsuite/btcd v0.21.0-beta
 	github.com/btcsuite/btcutil v1.0.2
 	github.com/buger/jsonparser v0.0.0-20181115193947-bf1c66bbce23
+	github.com/dgraph-io/badger v1.6.2 // indirect
 	github.com/ds/depaas/logger v0.0.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/ethereum/go-ethereum v1.8.20
@@ -21,6 +22,7 @@ require (
 	github.com/ipfs/go-cid v0.0.7
 	github.com/ipfs/go-cidutil v0.0.2
 	github.com/ipfs/go-datastore v0.4.5
+	github.com/ipfs/go-ds-badger v0.2.6 // indirect
 	github.com/ipfs/go-ds-measure v0.1.0
 	github.com/ipfs/go-filestore v0.0.3
 	github.com/ipfs/go-fs-lock v0.0.6
@@ -35,6 +37,7 @@ require (
 	github.com/ipfs/go-path v0.0.9
 	github.com/ipfs/interface-go-ipfs-core v0.4.0
 	github.com/jbenet/go-is-domain v1.0.5
+	github.com/jbenet/goprocess v0.1.4 // indirect
 	github.com/kr/pretty v0.2.1
 	github.com/libp2p/go-libp2p v0.13.0
 	github.com/libp2p/go-libp2p-core v0.8.5
@@ -60,7 +63,6 @@ require (
 )
 
 replace (
-
 	github.com/ds/depaas/logger v0.0.0 => ../logger
 	github.com/ethereum/go-ethereum v1.8.20 => github.com/loomnetwork/go-ethereum v1.8.17-0.20191122084538-6128fa1a8c76
 

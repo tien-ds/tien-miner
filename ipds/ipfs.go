@@ -4,6 +4,7 @@ import (
 	"context"
 	"gitee.com/fast_api/api"
 	"github.com/ds/depaas/closer"
+	"github.com/ds/depaas/ipds/muldisk"
 	"github.com/ds/depaas/utils"
 	"github.com/dustin/go-humanize"
 	"github.com/ipfs/go-ipfs/core/corerepo"
@@ -26,6 +27,10 @@ func checkError(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func init() {
+	loader.Preload(muldisk.Plugins...)
 }
 
 // OpenOrCreateRepo repoPath only create or open db
