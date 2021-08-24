@@ -70,7 +70,7 @@ func InitService() {
 }
 
 func main() {
-	utils.SetLog()
+	utils.SetLog(true)
 
 	flag.Parse()
 

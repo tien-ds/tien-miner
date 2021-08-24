@@ -40,7 +40,7 @@ func ReSizeArgs() {
 func main() {
 	doArgs()
 
-	gutils.SetLog()
+	gutils.SetLog(false)
 
 	//hook shutdown
 	go gutils.Shutdown(func() {

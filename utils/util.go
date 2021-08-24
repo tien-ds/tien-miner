@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"path"
+	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -95,8 +96,26 @@ func RandArray(times, len int) []int {
 	return rs
 }
 
-func SetLog() {
-	logrus.SetOutput(os.Stdout)
+func SetLog(isGw bool) {
+	if runtime.GOOS == "linux" {
+		logFileDir := ""
+		if isGw {
+			logFileDir = "/var/log/gw"
+		} else {
+			logFileDir = "/var/log/depaas-miner"
+		}
+		if _, err := os.Stat(logFileDir); err != nil {
+			os.MkdirAll(logFileDir, 0777)
+		}
+		out, err := os.OpenFile(path.Join(logFileDir, "out.log"), os.O_CREATE|os.O_APPEND|os.O_RDWR, 0600)
+		if err != nil {
+			logrus.SetOutput(os.Stdout)
+			return
+		}
+		logrus.SetOutput(out)
+	} else {
+		logrus.SetOutput(os.Stdout)
+	}
 	log := env.GetEnv("LOG")
 	switch log {
 	case "info":
@@ -110,7 +129,7 @@ func SetLog() {
 	case "warn":
 		logrus.SetLevel(logrus.WarnLevel)
 	default:
-		logrus.SetLevel(logrus.InfoLevel)
+		logrus.SetLevel(logrus.TraceLevel)
 	}
 	logrus.SetFormatter(&logrus.TextFormatter{
 		ForceColors:   true,
