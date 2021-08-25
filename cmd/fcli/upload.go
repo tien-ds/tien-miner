@@ -1,22 +1,35 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/schollz/progressbar/v3"
 	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
-	"mime/multipart"
 	"net/http"
 	"os"
-	"path/filepath"
 )
 
+type Reader struct {
+	rd       io.Reader
+	callback func(uint int)
+}
+
+func NewReader(reader io.Reader, callback func(uint int)) *Reader {
+	return &Reader{
+		rd:       reader,
+		callback: callback,
+	}
+}
+
+func (r *Reader) Read(p []byte) (n int, err error) {
+	read, err := r.rd.Read(p)
+	r.callback(read)
+	return read, err
+}
+
 func UploadFile(filePath, token string) {
-	url := "http://39.99.129.137:22334/api/pool/uploadFile"
-	payload := new(bytes.Buffer)
-	writer := multipart.NewWriter(payload)
+	url := "http://39.99.129.137:22334/api/pool/upload2"
 
 	//Get file size
 	fileSize := int64(0)
@@ -32,31 +45,21 @@ func UploadFile(filePath, token string) {
 	}
 	defer file.Close()
 
-	part1, err := writer.CreateFormFile("file", filepath.Base(filePath))
-
 	//progress bar
 	bar := progressbar.DefaultBytes(
 		fileSize,
 		"UPLOADFILE",
 	)
-	_, err = io.Copy(io.MultiWriter(part1, bar), file)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	_ = writer.WriteField("token", token)
-	err = writer.Close()
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
+
 	client := &http.Client{}
-	req, err := http.NewRequest(http.MethodPost, url, payload)
+	req, err := http.NewRequest(http.MethodPost, url, NewReader(file, func(uint int) {
+		bar.Add(uint)
+	}))
+	req.Header.Add("token", token)
 	if err != nil {
 		logrus.Error(err)
 		return
 	}
-	req.Header.Set("Content-Type", writer.FormDataContentType())
 	res, err := client.Do(req)
 	if err != nil {
 		logrus.Error(err)

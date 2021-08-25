@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"github.com/ds/depaas/ipds"
 	"mime/multipart"
+	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"gitee.com/fast_api/api/def"
 	"github.com/ds/depaas/crypto"
@@ -110,6 +112,13 @@ func toIpfs(tempName, sToken string) interface{} {
 	}
 	logrus.Debugf("ok %s", pHash.Cid().String())
 	return map[string]string{"result": pHash.Cid().String()}
+}
+
+func uploadFile2(req http.Request) interface{} {
+	token := req.Header.Get("token")
+	fileName := utils.Md5String(time.Now().String())
+	_, tempName, _ := utils.WriteToTemp(0, req.Body, fileName)
+	return toIpfs(tempName, token)
 }
 
 func uploadFile(reader multipart.Reader) interface{} {
