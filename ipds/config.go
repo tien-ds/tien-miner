@@ -163,41 +163,12 @@ func DefaultDatastoreConfig() config.Datastore {
 func badgerSpec() map[string]interface{} {
 	return map[string]interface{}{
 		"type":   "measure",
-		"prefix": "badger.datastore",
+		"prefix": "ds-mul-datastore.datastore",
 		"child": map[string]interface{}{
-			"type":       "badgerds",
+			"type":       "ds-mul-datastore",
 			"path":       "dsblocks",
 			"syncWrites": false,
 			"truncate":   true,
-		},
-	}
-}
-
-func flatfsSpec() map[string]interface{} {
-	return map[string]interface{}{
-		"type": "mount",
-		"mounts": []interface{}{
-			map[string]interface{}{
-				"mountpoint": "/blocks",
-				"type":       "measure",
-				"prefix":     "flatfs.datastore",
-				"child": map[string]interface{}{
-					"type":      "flatfs",
-					"path":      "blocks",
-					"sync":      true,
-					"shardFunc": "/repo/flatfs/shard/v1/next-to-last/2",
-				},
-			},
-			map[string]interface{}{
-				"mountpoint": "/",
-				"type":       "measure",
-				"prefix":     "leveldb.datastore",
-				"child": map[string]interface{}{
-					"type":        "levelds",
-					"path":        "datastore",
-					"compression": "none",
-				},
-			},
 		},
 	}
 }

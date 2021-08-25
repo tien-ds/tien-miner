@@ -41,6 +41,7 @@ func apiRest() {
 	api.GET(getMinerInfo, "/api/pool/peer")
 	api.POST(uploadFile1, "/api/pool/upload")
 	api.POST(uploadFile, "/api/pool/uploadFile")
+	api.POST(uploadFile2, "/api/pool/upload2")
 	//api.POST(uploadFile1, "/api/pool/upload")
 	//api.GetApi().POST(uploadDir, "/api/pool/uploadDir")
 	//api.GetApi().POST(uploadData, "/api/pool/speed")

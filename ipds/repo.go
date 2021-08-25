@@ -279,6 +279,7 @@ func (r *PriRepo) openDatastore() error {
 		return err
 	}
 
+	//r.path mul path
 	d, err := dsc.Create(r.path)
 	if err != nil {
 		return err
