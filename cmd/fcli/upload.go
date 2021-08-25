@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"fmt"
+	"github.com/schollz/progressbar/v3"
 	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
@@ -11,42 +13,61 @@ import (
 	"path/filepath"
 )
 
-func UploadFile(filePath, token string) ([]byte, error) {
-	url := "http://127.0.0.1:8099/api/pool/upload"
-	method := "POST"
-	payload := &bytes.Buffer{}
+func UploadFile(filePath, token string) {
+	url := "http://39.99.129.137:22334/api/pool/uploadFile"
+	payload := new(bytes.Buffer)
 	writer := multipart.NewWriter(payload)
-	file, errFile1 := os.Open(filePath)
+
+	//Get file size
+	fileSize := int64(0)
+	if s, e := os.Stat(filePath); e == nil {
+		fileSize = s.Size()
+	}
+
+	//Open file
+	file, err := os.Open(filePath)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	defer file.Close()
-	part1, errFile1 := writer.CreateFormFile("file", filepath.Base(filePath))
-	_, errFile1 = io.Copy(part1, file)
-	if errFile1 != nil {
-		logrus.Error(errFile1)
-		return nil, errFile1
+
+	part1, err := writer.CreateFormFile("file", filepath.Base(filePath))
+
+	//progress bar
+	bar := progressbar.DefaultBytes(
+		fileSize,
+		"UPLOADFILE",
+	)
+	_, err = io.Copy(io.MultiWriter(part1, bar), file)
+	if err != nil {
+		logrus.Error(err)
+		return
 	}
 	_ = writer.WriteField("token", token)
-	err := writer.Close()
+	err = writer.Close()
 	if err != nil {
 		logrus.Error(err)
-		return nil, err
+		return
 	}
 	client := &http.Client{}
-	req, err := http.NewRequest(method, url, payload)
+	req, err := http.NewRequest(http.MethodPost, url, payload)
 	if err != nil {
 		logrus.Error(err)
-		return nil, err
+		return
 	}
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	res, err := client.Do(req)
 	if err != nil {
 		logrus.Error(err)
-		return nil, err
+		return
 	}
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		logrus.Error(err)
-		return nil, err
+		return
 	}
-	return body, nil
+	fmt.Println(string(body))
+
 }

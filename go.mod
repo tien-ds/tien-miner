@@ -14,6 +14,7 @@ require (
 	github.com/ds/depaas/logger v0.0.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/ethereum/go-ethereum v1.8.20
+	github.com/fatih/color v1.12.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.1.2
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/golang/mock v1.5.0 // indirect
@@ -47,6 +48,7 @@ require (
 	github.com/multiformats/go-multiaddr-dns v0.2.0
 	github.com/multiformats/go-multibase v0.0.3
 	github.com/pilebones/go-udev v0.0.0-20210126000448-a3c2a7a4afb7
+	github.com/schollz/progressbar/v3 v3.8.2 // indirect
 	github.com/shirou/gopsutil v3.21.6+incompatible
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.1.1
@@ -55,9 +57,10 @@ require (
 	github.com/tklauser/go-sysconf v0.3.7 // indirect
 	github.com/whyrusleeping/cbor-gen v0.0.0-20200715143311-227fab5a2377 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
+	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 	golang.org/x/net v0.0.0-20210503060351-7fd8e65b6420 // indirect
 	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c // indirect
+	golang.org/x/sys v0.0.0-20210823070655-63515b42dcdf // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20210604141403-392c879c8b08 // indirect
 )

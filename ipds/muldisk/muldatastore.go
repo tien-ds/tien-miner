@@ -10,8 +10,7 @@ import (
 
 var dbs = make(map[string]*Datastore)
 
-type MulDataStore struct {
-}
+type MulDataStore struct{}
 
 func NewMulDataStore(ops *Options, p string) (*MulDataStore, error) {
 	split := strings.Split(p, ";")
@@ -66,13 +65,25 @@ func (m *MulDataStore) Query(q dsq.Query) (dsq.Results, error) {
 	return nil, ds.ErrNotFound
 }
 
+func (m *MulDataStore) existIndex(key ds.Key) (string, error) {
+	for dsKey, ds := range dbs {
+		if b, e := ds.Has(key); e == nil && b {
+			return dsKey, nil
+		}
+	}
+	return "", ds.ErrNotFound
+}
+
 func (m *MulDataStore) Put(key ds.Key, value []byte) error {
+	if index, err := m.existIndex(key); err == nil && index != "" {
+		return dbs[index].Put(key, value)
+	}
 	for _, ds := range dbs {
 		if err := ds.Put(key, value); err == nil {
 			return nil
 		}
 	}
-	return errors.New("Put error")
+	return errors.New("Put ERROR")
 }
 
 func (m *MulDataStore) Delete(key ds.Key) error {
@@ -85,7 +96,10 @@ func (m *MulDataStore) Delete(key ds.Key) error {
 }
 
 func (m *MulDataStore) Sync(prefix ds.Key) error {
-	panic("implement me")
+	for _, ds := range dbs {
+		_ = ds.Sync(prefix)
+	}
+	return nil
 }
 
 func (m *MulDataStore) Close() error {

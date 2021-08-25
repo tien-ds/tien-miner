@@ -7,7 +7,7 @@ import (
 )
 
 func TestInit(t *testing.T) {
-
+	//path.Base()
 }
 
 func TestMulAddr(t *testing.T) {

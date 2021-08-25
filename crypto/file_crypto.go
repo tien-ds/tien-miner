@@ -3,6 +3,7 @@ package crypto
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"github.com/btcsuite/btcutil/base58"
 	"github.com/ds/depaas/utils"
 	"github.com/ethereum/go-ethereum/common"
@@ -27,7 +28,11 @@ func BufferKey(key string, r io.Reader) string {
 		panic(err)
 	}
 	c := h.Sum(nil)
-	rs, e := utils.Des3Encrypt([]byte(key), Resize24(c))
+	return FKeyWithMd5(key, c)
+}
+
+func FKeyWithMd5(pkey string, md5 []byte) string {
+	rs, e := utils.Des3Encrypt([]byte(pkey), Resize24(md5))
 	if e != nil {
 		panic(e)
 	}
@@ -36,7 +41,7 @@ func BufferKey(key string, r io.Reader) string {
 
 func Resize24(b []byte) []byte {
 	if len(b) != 16 {
-		panic("error")
+		panic(fmt.Sprintf("%d!=16", len(b)))
 	}
 	var a []byte
 	a = append(a, b[:16]...)
