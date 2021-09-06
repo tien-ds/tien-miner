@@ -19,5 +19,4 @@ go build -x -o arm64-miner -tags main github.com/ds/depaas/cmd/miner
 ```
 ## Document 
 [depaas miner docs](https://github.com/tien-ds/tien-miner/wiki)
-# Architecture
-![Architecture](./docs/me.svg)
+
