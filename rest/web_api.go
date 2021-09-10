@@ -241,7 +241,7 @@ func apiRest() {
 		FeeTo     string `json:"feeTo"`
 	}) interface{} {
 		//TODO ethurl
-		con, cancel := context.WithTimeout(context.Background(), time.Second*15)
+		con, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		id := utils.GenRand()
 		res := make(map[string]string)
 		err := pools.Online().Get(param.PeerId, func(msg protocol.Msg) {
@@ -270,7 +270,8 @@ func apiRest() {
 		}
 		<-con.Done()
 		if con.Err() != context.Canceled {
-			panic(con.Err())
+			res["result"] = "timeout"
+			res["state"] = "fail"
 		}
 		return res
 
@@ -309,7 +310,7 @@ func apiRest() {
 		FeeAmount string `json:"feeAmount"`
 		FeeTo     string `json:"feeTo"`
 	}) interface{} {
-		con, cancel := context.WithTimeout(context.Background(), time.Second*15)
+		con, cancel := context.WithTimeout(context.Background(), time.Minute)
 		id := utils.GenRand()
 		res := make(map[string]string)
 		err := pools.Online().Get(param.PeerId, func(msg protocol.Msg) {
@@ -329,7 +330,6 @@ func apiRest() {
 					} else {
 						res["state"] = "fail"
 					}
-
 				}
 				cancel()
 			})

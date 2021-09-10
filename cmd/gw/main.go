@@ -8,7 +8,7 @@ import (
 	"github.com/ds/depaas/ipds"
 	"github.com/ds/depaas/ipds/web"
 	"github.com/ds/depaas/persistence"
-	_ "github.com/ds/depaas/persistence/orbitdb"
+	_ "github.com/ds/depaas/persistence/leveldb"
 	"github.com/ds/depaas/register"
 	"github.com/ds/depaas/rest"
 	"github.com/ds/depaas/service"

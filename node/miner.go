@@ -184,7 +184,7 @@ func diskTotalSpace() (float64, []disk.PartitionStat) {
 		logrus.Debug("diskTotalSpace err:", err)
 		return 0, nil
 	}
-	return float64(diskinfo.Total) / 1000000000, nil
+	return float64(diskinfo.Total) / 1_000_000_000, nil
 	//	totalSpace += diskinfo.Total
 	//	//infodata, _ := json.MarshalIndent(diskinfo, "", "  ")
 	//	//logrus.Debug("data:", string(data), ",infodata:", string(infodata))
@@ -458,9 +458,7 @@ func (ws *NodeContext) update(data []byte) error {
 	return ws.updateEcho(cmd.ID, 1)
 }
 
-func (ws *NodeContext) DeeTransfer(url string, params []protocol.BeeParamArgs) (map[string]interface{}, error) {
-	result := make(map[string]interface{})
-
+func (ws *NodeContext) DeeTransfer(url string, params []protocol.BeeParamArgs) (string, error) {
 	ret := make(map[string]interface{})
 	for _, v := range params {
 		//logrus.Debug(index, "\t",value)
@@ -471,15 +469,13 @@ func (ws *NodeContext) DeeTransfer(url string, params []protocol.BeeParamArgs) (
 
 		logrus.Debug("DeeTransfer hash:", hash, ",err:", err)
 		if err != nil {
-			return result, err
+			return "", err
 		}
-
 		ret[v.To] = hash
 	}
 
-	retdata, _ := json.Marshal(ret)
-	result["text"] = string(retdata)
-	return result, nil
+	retData, _ := json.Marshal(ret)
+	return string(retData), nil
 }
 
 func (ws *NodeContext) run() error {
@@ -736,25 +732,24 @@ func (ws *NodeContext) loopMsg(c *websocket.Conn, done chan struct{}) {
 			} else if cmd.Cmd == protocol.BEE_STOP {
 				ws.runCmds([][]string{{"docker", "stop", "bzz2"}})
 			} else if cmd.Cmd == protocol.BEE_TRANSFER || cmd.Cmd == protocol.DE_TRANSFER {
-				var result map[string]interface{}
 				var err error
+				var result string
 				if cmd.Cmd == protocol.BEE_TRANSFER {
 					result, err = bee.BeeTransfer(cmd.Url, cmd.Params)
 				} else {
 					result, err = ws.DeeTransfer(cmd.Url, cmd.Params)
 				}
-
-				//hashs, _ := BeeTransfer(cmd.Url, cmd.Params)
-				//data, err := json.Marshal(result)
-
-				result["peerId"] = cmd.ID
-				if err == nil {
-					result["type"] = protocol.CMD_RESP_SUCCESS
-				} else {
-					result["type"] = protocol.CMD_RESP_FAIL
-					result["text"] = err.Error()
+				cmdResult := protocol.CmderResult{
+					MsgType: protocol.MsgType{ID: cmd.ID},
 				}
-				err = ws.SendEncryptMessage(result)
+				if err == nil {
+					cmdResult.Type = protocol.CMD_RESP_SUCCESS
+					cmdResult.Text = result
+				} else {
+					cmdResult.Type = protocol.CMD_RESP_FAIL
+					cmdResult.Text = err.Error()
+				}
+				err = ws.SendEncryptMessage(cmdResult)
 				if err != nil {
 					break
 				}
@@ -841,6 +836,7 @@ func StartMinerWithNode(ctx context.Context) error {
 	err := mi.SetMap(peerId)
 	if err != nil {
 		logrus.Error(err)
+		return err
 	}
 
 	logrus.Debugf("Address: %s", config.GetChainAddress())

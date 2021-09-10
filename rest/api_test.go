@@ -7,7 +7,6 @@ import (
 	"github.com/ds/depaas/ipds"
 	_ "github.com/ds/depaas/persistence/leveldb"
 	"github.com/ds/depaas/pools"
-
 	files "github.com/ipfs/go-ipfs-files"
 
 	"testing"
@@ -26,5 +25,4 @@ func TestFiles(t *testing.T) {
 		"c": files.NewReaderFile(kk),
 	}))
 	fmt.Println(pHash.String())
-
 }

@@ -191,50 +191,50 @@ func KeysToPrivateKey(path string) (string, error) {
 	//return "0x0ad52e725b52f295fb23f7163f43b6e48b7fdd98d20e7b299c9fed892fe2ca9a", nil
 }
 
-func BeeTransfer(url string, params []protocol.BeeParamArgs) (map[string]interface{}, error) {
-	result := make(map[string]interface{})
+func BeeTransfer(url string, params []protocol.BeeParamArgs) (string, error) {
+
 	client, err := ethclient.Dial(url)
 	if err != nil {
 		logrus.Debug("transfer err:", err)
-		return result, nil
+		return "", nil
 	}
 
 	privateKey, err := KeysToPrivateKey("/var/lib/bee/keys")
 	if err != nil {
 		logrus.Debug("transfer err:", err)
-		return result, nil
+		return "", nil
 	}
 
 	priKey, err := crypto.HexToECDSA(privateKey[2:])
 	if err != nil {
 		logrus.Debug("transfer err:", err)
-		return result, nil
+		return "", nil
 	}
 
 	from := crypto.PubkeyToAddress(priKey.PublicKey)
 	logrus.Debug("transfer from:", from)
 	if err != nil {
 		logrus.Debug("transfer err:", err)
-		return result, nil
+		return "", nil
 	}
 
 	context := context.Background()
 	chainID, err := client.NetworkID(context)
 	if err != nil {
 		logrus.Debug("transfer err:", err)
-		return result, nil
+		return "", nil
 	}
 
 	nonce, err := client.PendingNonceAt(context, from)
 	if err != nil {
 		logrus.Debug("transfer err:", err)
-		return result, nil
+		return "", nil
 	}
 
 	gasPrice, err := client.SuggestGasPrice(context)
 	if err != nil {
 		logrus.Debug("transfer err:", err)
-		return result, nil
+		return "", nil
 	}
 
 	ret := make(map[string]interface{})
@@ -249,13 +249,12 @@ func BeeTransfer(url string, params []protocol.BeeParamArgs) (map[string]interfa
 		logrus.Debug("transfer signedTx.Hash().String():", signedTx.Hash().String(), ",err:", err)
 
 		if err != nil {
-			return result, err
+			return "", err
 		}
 
 		ret[v.To] = signedTx.Hash().String()
 	}
 
 	retdata, _ := json.Marshal(ret)
-	result["text"] = string(retdata)
-	return result, nil
+	return string(retdata), nil
 }
