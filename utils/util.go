@@ -34,10 +34,15 @@ func GetConfigDir() string {
 }
 
 func GetContextDir(name string) string {
-	repoPath := path.Join(BestPoolPath(), name)
-	if !Exist(repoPath) {
-		os.MkdirAll(repoPath, 0777)
+	poolPath := BestPoolPath()
+	if strings.Contains(poolPath, ";") {
+		var cDir string
+		for _, dir := range strings.Split(poolPath, ";") {
+			cDir += path.Join(dir, name) + ";"
+		}
+		return cDir[:len(cDir)-1]
 	}
+	repoPath := path.Join(poolPath, name)
 	return repoPath
 }
 
@@ -45,6 +50,13 @@ func BestPoolPath() string {
 	dir := os.Getenv("DS_PATH")
 	if dir == "" {
 		dir, _ = os.UserHomeDir()
+	}
+	if strings.Contains(dir, ";") {
+		var cDir string
+		for _, d := range strings.Split(dir, ";") {
+			cDir += path.Join(d, ".depaas") + ";"
+		}
+		return cDir[:len(cDir)-1]
 	}
 	return path.Join(dir, ".depaas")
 }

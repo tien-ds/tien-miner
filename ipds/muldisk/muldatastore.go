@@ -2,30 +2,66 @@ package muldisk
 
 import (
 	"errors"
+	"fmt"
 	ds "github.com/ipfs/go-datastore"
 	dsq "github.com/ipfs/go-datastore/query"
+	"github.com/ipfs/go-ipfs/thirdparty/dir"
 	"github.com/sirupsen/logrus"
 	"strings"
 )
 
 var dbs = make(map[string]*Datastore)
 
+var defaultOps *Options
+
 type MulDataStore struct{}
 
 func NewMulDataStore(ops *Options, p string) (*MulDataStore, error) {
 	split := strings.Split(p, ";")
-	for _, path := range split {
-		if _, b := dbs[path]; b {
+	var fail string
+	for _, dbDir := range split {
+		if dir.Writable(dbDir) != nil {
+			fail += dbDir + ";"
+		}
+		if _, b := dbs[dbDir]; b || dbDir == "" {
 			continue
 		}
-		datastore, err := NewDatastore(path, ops)
+		datastore, err := NewDatastore(dbDir, ops)
 		if err != nil {
-			logrus.Errorf("open datastore %s %s", path, err)
-			return nil, err
+			fail += dbDir + ";"
+			continue
 		}
-		dbs[path] = datastore
+		logrus.Infof("Open DB %s", dbDir)
+		dbs[dbDir] = datastore
 	}
-	return &MulDataStore{}, nil
+	defaultOps = ops
+	if fail == "" {
+		return &MulDataStore{}, nil
+	} else {
+		return nil, fmt.Errorf("open fail %s", fail[:len(fail)-1])
+	}
+
+}
+
+// AppendDataStore used for exService
+func AppendDataStore(path string) error {
+	if defaultOps == nil {
+		return errors.New("No init")
+	}
+	datastore, err := NewDatastore(path, defaultOps)
+	if err != nil {
+		panic(err)
+	}
+	dbs[path] = datastore
+	return nil
+}
+
+func (m *MulDataStore) String() string {
+	var paths string
+	for key := range dbs {
+		paths += key + ";"
+	}
+	return "MulDataStore: " + paths[:len(paths)-1]
 }
 
 func (m *MulDataStore) Get(key ds.Key) (value []byte, err error) {

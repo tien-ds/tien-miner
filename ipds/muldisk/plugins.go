@@ -7,8 +7,6 @@ import (
 	"github.com/ipfs/go-ipfs/plugin"
 	"github.com/ipfs/go-ipfs/repo"
 	"github.com/ipfs/go-ipfs/repo/fsrepo"
-	"os"
-	"path/filepath"
 )
 
 // Plugins is exported list of plugins that will be loaded
@@ -107,20 +105,10 @@ func (c *datastoreConfig) DiskSpec() fsrepo.DiskSpec {
 
 func (c *datastoreConfig) Create(path string) (repo.Datastore, error) {
 
-	p := c.path
-	if !filepath.IsAbs(p) {
-		p = filepath.Join(path, p)
-	}
-
-	err := os.MkdirAll(p, 0755)
-	if err != nil {
-		return nil, err
-	}
-
 	defopts := DefaultOptions
 	defopts.SyncWrites = c.syncWrites
 	defopts.Truncate = c.truncate
 	defopts.ValueLogFileSize = c.vlogFileSize
 
-	return NewMulDataStore(&defopts, p)
+	return NewMulDataStore(&defopts, path)
 }

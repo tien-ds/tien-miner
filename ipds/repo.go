@@ -7,21 +7,17 @@ import (
 	nconf "github.com/ds/depaas/database/config"
 	"github.com/ipfs/go-ipfs/repo/fsrepo"
 	"io"
-	"os"
 	"path/filepath"
 	"sync"
 
-	filestore "github.com/ipfs/go-filestore"
-	keystore "github.com/ipfs/go-ipfs/keystore"
-	repo "github.com/ipfs/go-ipfs/repo"
-	dir "github.com/ipfs/go-ipfs/thirdparty/dir"
-
 	ds "github.com/ipfs/go-datastore"
 	measure "github.com/ipfs/go-ds-measure"
+	filestore "github.com/ipfs/go-filestore"
 	lockfile "github.com/ipfs/go-fs-lock"
 	config "github.com/ipfs/go-ipfs-config"
+	keystore "github.com/ipfs/go-ipfs/keystore"
+	repo "github.com/ipfs/go-ipfs/repo"
 	logging "github.com/ipfs/go-log"
-	homedir "github.com/mitchellh/go-homedir"
 	ma "github.com/multiformats/go-multiaddr"
 )
 
@@ -137,9 +133,9 @@ func open(repoPath string, configDir string) (repo.Repo, error) {
 	//}
 
 	// check repo path, then check all constituent parts.
-	if err := dir.Writable(r.path); err != nil {
-		return nil, err
-	}
+	//if err := dir.Writable(r.path); err != nil {
+	//	return nil, err
+	//}
 
 	if err := r.openConfig(); err != nil {
 		return nil, err
@@ -153,25 +149,21 @@ func open(repoPath string, configDir string) (repo.Repo, error) {
 	//	return nil, err
 	//}
 
-	if r.config.Experimental.FilestoreEnabled || r.config.Experimental.UrlstoreEnabled {
-		r.filemgr = filestore.NewFileManager(r.ds, filepath.Dir(r.path))
-		r.filemgr.AllowFiles = r.config.Experimental.FilestoreEnabled
-		r.filemgr.AllowUrls = r.config.Experimental.UrlstoreEnabled
-	}
+	//if r.config.Experimental.FilestoreEnabled || r.config.Experimental.UrlstoreEnabled {
+	//	r.filemgr = filestore.NewFileManager(r.ds, filepath.Dir(r.path))
+	//	r.filemgr.AllowFiles = r.config.Experimental.FilestoreEnabled
+	//	r.filemgr.AllowUrls = r.config.Experimental.UrlstoreEnabled
+	//}
 
 	keepLocked = true
 	return r, nil
 }
 
 func newFSRepo(rpath string, configDir string) (*PriRepo, error) {
-	expPath, err := homedir.Expand(filepath.Clean(rpath))
-	if err != nil {
-		return nil, err
-	}
-
-	return &PriRepo{path: expPath, configDir: configDir}, nil
+	return &PriRepo{path: rpath, configDir: configDir}, nil
 }
 
+// checkInitialized path is used by Error
 func checkInitialized(path string) error {
 	if !isInitializedUnsynced() {
 		return NoRepoError{Path: path}
@@ -251,17 +243,17 @@ func (r *PriRepo) openConfig() error {
 	return err
 }
 
-func (r *PriRepo) openKeystore() error {
-	ksp := filepath.Join(r.path, "keystore")
-	ks, err := keystore.NewFSKeystore(ksp)
-	if err != nil {
-		return err
-	}
-
-	r.keystore = ks
-
-	return nil
-}
+//func (r *PriRepo) openKeystore() error {
+//	ksp := filepath.Join(r.path, "keystore")
+//	ks, err := keystore.NewFSKeystore(ksp)
+//	if err != nil {
+//		return err
+//	}
+//
+//	r.keystore = ks
+//
+//	return nil
+//}
 
 // openDatastore returns an error if the config file is not present.
 func (r *PriRepo) openDatastore() error {
@@ -302,10 +294,10 @@ func (r *PriRepo) Close() error {
 		return errors.New("repo is closed")
 	}
 
-	err := os.Remove(filepath.Join(r.path, apiFile))
-	if err != nil && !os.IsNotExist(err) {
-		log.Warn("error removing api file: ", err)
-	}
+	//err := os.Remove(filepath.Join(r.path, apiFile))
+	//if err != nil && !os.IsNotExist(err) {
+	//	log.Warn("error removing api file: ", err)
+	//}
 
 	if err := r.ds.Close(); err != nil {
 		return err

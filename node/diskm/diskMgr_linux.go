@@ -86,10 +86,14 @@ func diskInfo(e netlink.UEvent) {
 		devType := e.Env["DEVTYPE"]
 		fsType := e.Env["ID_FS_TYPE"]
 		devName := e.Env["DEVNAME"]
+		//add disk /dev/sdb ext4
 		logrus.Infof("%s %s %s %s", e.Action.String(), devType, devName, fsType)
+
 		if e.Action.String() == "remove" && devName == dev {
 			closer.CloseWithName("config.db")
 			closer.CloseWithName("udev")
+
+			//pm2 will restart self
 			os.Exit(0)
 		}
 	}

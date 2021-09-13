@@ -15,22 +15,6 @@ import (
 	"time"
 )
 
-func Init() {
-	//disk.Partitions()
-}
-
-/*
-	pvcreate -f /dev/sda
-
-	vgcreate ds-group /dev/sda
-
-	lvcreate -l 100%FREE -n ds ds-group
-
-	mkfs.ext4 /dev/ds-group/ds
-
-	mount /dev/ds-group/ds /mnt
-*/
-
 var pairsRE = regexp.MustCompile(`([A-Z:]+)=(?:"(.*?)")`)
 
 const (

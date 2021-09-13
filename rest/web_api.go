@@ -31,7 +31,7 @@ var checkSize = options.Unixfs.Chunker("size-1048576")
 func InitRest() {
 	//app rest
 	apiRest()
-	//test
+
 	test()
 }
 
