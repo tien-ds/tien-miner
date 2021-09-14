@@ -98,18 +98,33 @@ type BlockDevice struct {
 	SerialId string `yaml:"serialid,omitempty"`
 }
 
-func GetDevWithMountPoint(point string) string {
+func GetBlockDevs() []string {
 	devices, err := ListBlockDevices()
 	if err != nil {
 		logrus.Debug(devices)
-		return ""
+		return nil
 	}
+
+	var re []string
 	for _, device := range devices {
-		if device.MountPoint == point {
-			return device.DeviceName
+		if strings.HasPrefix(device.MountPoint, DS_DIR_PREFIX) {
+			re = append(re, device.DeviceName)
 		}
 	}
-	return ""
+	return re
+}
+
+func GetBlockSize(dev string) uint64 {
+	devices, err := ListBlockDevices()
+	if err != nil {
+		return 0
+	}
+	for _, device := range devices {
+		if dev == ("/dev/" + device.DeviceName) {
+			return device.Size
+		}
+	}
+	return 0
 }
 
 func ListBlockDevices() ([]BlockDevice, error) {
@@ -155,7 +170,7 @@ func ListBlockDevices() ([]BlockDevice, error) {
 						"invalid size %q from lsblk: %v", pair[2], err,
 					)
 				} else {
-					dev.Size = size / bytesInMiB
+					dev.Size = size
 				}
 			case "LABEL":
 				dev.Label = pair[2]

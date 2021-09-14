@@ -61,6 +61,8 @@ const (
 	BEE_INFO          MSG = 40
 	BEE_CMD_CODE      MSG = 42
 	BLOCK_CHECK       MSG = 43
+	MINER_DISK_CODE   MSG = 45
+	MINER_DISK_RESP   MSG = 46
 )
 
 func (m MSG) Int() int {

@@ -11,10 +11,10 @@ import (
 	"github.com/buger/jsonparser"
 	"github.com/ds/depaas/database/config"
 	"github.com/ds/depaas/ipds"
+	"github.com/ds/depaas/ipds/muldisk"
 	service2 "github.com/ds/depaas/ipds/service"
 	"github.com/ds/depaas/node/bee"
 	"github.com/ds/depaas/node/chia"
-	"github.com/ds/depaas/node/diskm"
 	"github.com/ds/depaas/node/env"
 	nutils "github.com/ds/depaas/node/utils"
 	"github.com/ds/depaas/protocol"
@@ -172,27 +172,8 @@ const (
 )
 
 func diskTotalSpace() (float64, []disk.PartitionStat) {
-	//var totalSpace uint64 = 0
-	//distInfos, _ := disk.Partitions(false)
-	//for _, info := range distInfos {
-	//	//data, _ := json.MarshalIndent(info, "", "  ")
-	//	if info.Device == "/dev/loop0" {
-	//		continue
-	//	}
-	diskinfo, err := disk.Usage(diskm.DS_DIR)
-	if err != nil {
-		logrus.Debug("diskTotalSpace err:", err)
-		return 0, nil
-	}
-	return float64(diskinfo.Total) / 1_000_000_000, nil
-	//	totalSpace += diskinfo.Total
-	//	//infodata, _ := json.MarshalIndent(diskinfo, "", "  ")
-	//	//logrus.Debug("data:", string(data), ",infodata:", string(infodata))
-	//}
-	//c, _ := ipds.GetNode().Repo.Config()
-	//parseBytes, _ := humanize.ParseBytes(c.Datastore.StorageMax)
-	//logrus.Debug("diskTotalSpace totalSpace:", humanize.Bytes(totalSpace))
-	//return float64(totalSpace) / 1000000000, nil
+	diskInfo := muldisk.GetTotalDisk()
+	return float64(diskInfo.Uint64()) / 1_000_000_000, nil
 }
 
 func (ws *NodeContext) machineInfo() protocol.InfoType {
@@ -695,6 +676,7 @@ func (ws *NodeContext) loopMsg(c *websocket.Conn, done chan struct{}) {
 			err = json.Unmarshal(message, &cmd)
 			ws.msgId = data.ID
 			ws.runShellCmd(cmd.Params)
+
 		case protocol.MNEMONIC_CODE:
 			info := make(map[string]interface{})
 			info["peerId"] = data.ID
@@ -710,10 +692,12 @@ func (ws *NodeContext) loopMsg(c *websocket.Conn, done chan struct{}) {
 			if err != nil {
 				break
 			}
+
 		case protocol.SELF_UPDATE_CODE:
 			if nil != ws.update(message) {
 				break
 			}
+
 		case protocol.CHIA_INFO_CODE:
 			err = ws.SendEncryptMessage(chia.ChiaInfoMsg(data.ID, ws.peerId))
 			if err != nil {
@@ -723,6 +707,7 @@ func (ws *NodeContext) loopMsg(c *websocket.Conn, done chan struct{}) {
 			if err != nil {
 				logrus.Debug("runPeriod BeeInfo err:", err)
 			}
+
 		case protocol.BEE_CMD_CODE:
 			var cmd protocol.CmderBee
 			err = json.Unmarshal(message, &cmd)
@@ -754,6 +739,7 @@ func (ws *NodeContext) loopMsg(c *websocket.Conn, done chan struct{}) {
 					break
 				}
 			}
+
 		case 50:
 			var key protocol.CmderPrikey
 			key.ID = data.ID
@@ -764,6 +750,7 @@ func (ws *NodeContext) loopMsg(c *websocket.Conn, done chan struct{}) {
 			if err != nil {
 				logrus.Debug("runPeriod BeeInfo err:", err)
 			}
+
 		case protocol.CMD_SYSTEM:
 			var enterData protocol.SendEntry
 			err = json.Unmarshal(message, &enterData)
@@ -772,6 +759,8 @@ func (ws *NodeContext) loopMsg(c *websocket.Conn, done chan struct{}) {
 				continue
 			}
 			ws.processCMDMsg(enterData, data.ID)
+		case protocol.MINER_DISK_CODE:
+
 		}
 	}
 }

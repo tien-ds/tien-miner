@@ -17,6 +17,7 @@ func GetFile(cid cid.Cid, fPath string) error {
 		logrus.Error(err)
 		return err
 	}
+	//FIXME fPath must limit
 	openFile, err := os.OpenFile(fPath, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		logrus.Error(err)

@@ -10,11 +10,31 @@ import (
 	"strings"
 )
 
-var dbs = make(map[string]*Datastore)
-
-var defaultOps *Options
+var (
+	//all datastore using same options
+	defaultOps *Options
+	//using for multi Datastore map[path]ds
+	dbs = make(map[string]*Datastore)
+	//store current map mountpoint and devName
+	mountPoints = make(map[string]string)
+)
 
 type MulDataStore struct{}
+
+func CheckRun(path string, f func(p string)) {
+	if b, stat := InPart(path); b {
+		if _, b1 := mountPoints[stat.Mountpoint]; !b1 {
+			mountPoints[stat.Mountpoint] = stat.Device
+			f(path)
+			return
+		} else {
+			logrus.Warnf("%s has exist in dev %s", path, stat.Device)
+		}
+	} else {
+		logrus.Warnf("not find dev with %s ", path)
+	}
+
+}
 
 func NewMulDataStore(ops *Options, p string) (*MulDataStore, error) {
 	split := strings.Split(p, ";")
@@ -26,16 +46,15 @@ func NewMulDataStore(ops *Options, p string) (*MulDataStore, error) {
 		if _, b := dbs[dbDir]; b || dbDir == "" {
 			continue
 		}
-		datastore, err := NewDatastore(dbDir, ops)
-		if err != nil {
-			fail += dbDir + ";"
-			continue
-		}
-		logrus.Infof("Open DB %s", dbDir)
-		dbs[dbDir] = datastore
+		CheckRun(dbDir, func(p string) {
+			datastore, _ := NewDatastore(p, ops)
+			dbs[p] = datastore
+			logrus.Infof("Open DB %s", p)
+		})
 	}
+
 	defaultOps = ops
-	if fail == "" {
+	if fail == "" && len(dbs) > 0 {
 		return &MulDataStore{}, nil
 	} else {
 		return nil, fmt.Errorf("open fail %s", fail[:len(fail)-1])
@@ -114,12 +133,16 @@ func (m *MulDataStore) Put(key ds.Key, value []byte) error {
 	if index, err := m.existIndex(key); err == nil && index != "" {
 		return dbs[index].Put(key, value)
 	}
+	var errs []string
 	for _, ds := range dbs {
-		if err := ds.Put(key, value); err == nil {
+		if err := ds.Put(key, value); err != nil {
+			fmt.Println(err)
+			errs = append(errs, err.Error())
+		} else {
 			return nil
 		}
 	}
-	return errors.New("Put ERROR")
+	return fmt.Errorf("%s", errs)
 }
 
 func (m *MulDataStore) Delete(key ds.Key) error {
