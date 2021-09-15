@@ -3,12 +3,15 @@ package diskm
 import (
 	"fmt"
 	"github.com/ds/depaas/closer"
+	"github.com/ds/depaas/ipds/muldisk"
 	"github.com/dustin/go-humanize"
 	"github.com/pilebones/go-udev/netlink"
 	"github.com/shirou/gopsutil/disk"
 	"github.com/sirupsen/logrus"
 	"log"
 	"os"
+	"path"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -127,9 +130,14 @@ func diskInfo(e netlink.UEvent) {
 		logrus.Infof("%s %s %s %s", e.Action.String(), devType, devName, fsType)
 		if e.Action.String() == "add" {
 			fmt.Println("add dev ", humanize.Bytes(GetBlockSize(devName)))
+			fmt.Println(GetLabel(devName))
+			if strings.HasPrefix(GetLabel(devName), "ds") {
+				go WaitAppend(devName)
+			}
 		}
 		if e.Action.String() == "remove" && HasMinedDev(devName) {
-			UnPlugin(devName)
+			UnMountPlugin(devName)
+			muldisk.UnPlugin(devName)
 			if DiskSize() == 0 {
 				closer.CloseWithName("config.db")
 				closer.CloseWithName("udev")
@@ -137,5 +145,19 @@ func diskInfo(e netlink.UEvent) {
 			}
 			//pm2 will restart self
 		}
+	}
+}
+
+func WaitAppend(dev string) {
+	for i := 0; i < 5; i++ {
+		withDiskPath := GetMountWithDisk(dev)
+		if withDiskPath != "" {
+			pathDB := path.Join(withDiskPath, ".depaas", os.Getenv("repo"))
+			muldisk.AppendDataStore(pathDB)
+			logrus.Infof("Append DB %s", pathDB)
+			break
+		}
+		logrus.Debugf("wait for %s", dev)
+		time.Sleep(time.Second * 30)
 	}
 }

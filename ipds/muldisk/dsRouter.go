@@ -7,6 +7,7 @@ import (
 	dsq "github.com/ipfs/go-datastore/query"
 	"github.com/ipfs/go-ipfs/thirdparty/dir"
 	"github.com/sirupsen/logrus"
+	"math/rand"
 	"strings"
 )
 
@@ -130,19 +131,20 @@ func (m *MulDataStore) existIndex(key ds.Key) (string, error) {
 }
 
 func (m *MulDataStore) Put(key ds.Key, value []byte) error {
+	//recover
 	if index, err := m.existIndex(key); err == nil && index != "" {
 		return dbs[index].Put(key, value)
 	}
-	var errs []string
-	for _, ds := range dbs {
-		if err := ds.Put(key, value); err != nil {
-			fmt.Println(err)
-			errs = append(errs, err.Error())
-		} else {
-			return nil
-		}
+	return randDB().Put(key, value)
+
+}
+
+func randDB() *Datastore {
+	var randKey []string
+	for key := range dbs {
+		randKey = append(randKey, key)
 	}
-	return fmt.Errorf("%s", errs)
+	return dbs[randKey[rand.Intn(len(dbs))]]
 }
 
 func (m *MulDataStore) Delete(key ds.Key) error {

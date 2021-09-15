@@ -41,6 +41,6 @@ func HasMinedDev(dev string) bool {
 	return false
 }
 
-func UnPlugin(dev string) {
+func UnMountPlugin(dev string) {
 	delete(onMountDisk, dev)
 }

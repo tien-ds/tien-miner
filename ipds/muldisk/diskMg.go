@@ -2,6 +2,7 @@ package muldisk
 
 import (
 	"github.com/shirou/gopsutil/disk"
+	"github.com/sirupsen/logrus"
 	"math/big"
 	"strings"
 )
@@ -52,4 +53,16 @@ func GetTotalDisk() *big.Int {
 		}
 	}
 	return newInt
+}
+
+func UnPlugin(dev string) {
+	logrus.Debug("UnPlugin", dev)
+	for key := range dbs {
+		isBlocked, partDev := InPart(key)
+		if isBlocked && partDev.Device == dev {
+			delete(dbs, key)
+			logrus.Infof("Unplugin %s", key)
+		}
+
+	}
 }

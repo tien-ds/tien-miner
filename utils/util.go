@@ -126,24 +126,9 @@ func SetLog(isGw bool) {
 		logrus.SetLevel(logrus.TraceLevel)
 	}
 
+	if env.GetEnv("TRACEFILE") != "" {
+		logrus.SetReportCaller(true)
+	}
+
 	logger.InjectLogrus(logger.File("/var/log/depaas/out.log"), logger.File("/var/log/depaas/err.log"))
-	//if runtime.GOOS == "linux" {
-	//	logFileDir := ""
-	//	if isGw {
-	//		logFileDir = "/var/log/gw"
-	//	} else {
-	//		logFileDir = "/var/log/depaas-miner"
-	//	}
-	//	if _, err := os.Stat(logFileDir); err != nil {
-	//		os.MkdirAll(logFileDir, 0777)
-	//	}
-	//	out, err := os.OpenFile(path.Join(logFileDir, "out.log"), os.O_CREATE|os.O_APPEND|os.O_RDWR, 0600)
-	//	if err != nil {
-	//		logrus.SetOutput(os.Stdout)
-	//		return
-	//	}
-	//	logrus.SetOutput(out)
-	//} else {
-	//	logrus.SetOutput(os.Stdout)
-	//}
 }

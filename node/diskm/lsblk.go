@@ -114,6 +114,19 @@ func GetBlockDevs() []string {
 	return re
 }
 
+func GetLabel(dev string) string {
+	devices, err := ListBlockDevices()
+	if err != nil {
+		return ""
+	}
+	for _, bdev := range devices {
+		if ("/dev/" + bdev.DeviceName) == dev {
+			return bdev.Label
+		}
+	}
+	return ""
+}
+
 func GetBlockSize(dev string) uint64 {
 	devices, err := ListBlockDevices()
 	if err != nil {
