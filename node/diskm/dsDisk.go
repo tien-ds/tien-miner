@@ -7,15 +7,21 @@ import (
 
 const DS_DIR_PREFIX = "/media/root/ds"
 
+// HasDSMounts list all blocks
 func HasDSMounts() []disk.PartitionStat {
-	devices, err := disk.Partitions(true)
+	devices, err := ListBlockDevices()
 	if err != nil {
 		return nil
 	}
 	var origin []disk.PartitionStat
 	for _, device := range devices {
-		if strings.HasPrefix(device.Mountpoint, DS_DIR_PREFIX) {
-			origin = append(origin, device)
+		if strings.HasPrefix(device.MountPoint, DS_DIR_PREFIX) {
+			origin = append(origin, disk.PartitionStat{
+				Device:     "/dev/" + device.DeviceName,
+				Mountpoint: device.MountPoint,
+				Fstype:     device.FilesystemType,
+				Opts:       "",
+			})
 		}
 	}
 	return origin

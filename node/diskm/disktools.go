@@ -20,7 +20,7 @@ func E2Label(dev string, label string) error {
 	return command.Run()
 }
 
-func GetMountWithDisk(dev string) string {
+func GetMountpointWithDisk(dev string) string {
 	partitions, err := disk.Partitions(true)
 	if err != nil {
 		return ""

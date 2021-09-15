@@ -24,10 +24,10 @@ func StartDiskManger() {
 
 // fixDevBlock fix err block or unmount mountpoint
 func fixDevBlock() {
-	blocksDev := GetBlockDevs()
+	blocksDev, _ := disk.Partitions(true)
 	fond := func(dev string) bool {
 		for _, s := range blocksDev {
-			if ("/dev/" + s) == dev {
+			if s.Device == dev {
 				return true
 			}
 		}
@@ -138,7 +138,9 @@ func diskInfo(e netlink.UEvent) {
 		if e.Action.String() == "remove" && HasMinedDev(devName) {
 			UnMountPlugin(devName)
 			muldisk.UnPlugin(devName)
-			if DiskSize() == 0 {
+			diskSize := DiskSize()
+			logrus.Infof("remain disksize %d", diskSize)
+			if diskSize == 0 {
 				closer.CloseWithName("config.db")
 				closer.CloseWithName("udev")
 				os.Exit(0)
@@ -150,10 +152,11 @@ func diskInfo(e netlink.UEvent) {
 
 func WaitAppend(dev string) {
 	for i := 0; i < 5; i++ {
-		withDiskPath := GetMountWithDisk(dev)
+		withDiskPath := GetMountpointWithDisk(dev)
 		if withDiskPath != "" {
 			pathDB := path.Join(withDiskPath, ".depaas", os.Getenv("repo"))
 			muldisk.AppendDataStore(pathDB)
+			UsedMinerDisk(dev, withDiskPath)
 			logrus.Infof("Append DB %s", pathDB)
 			break
 		}

@@ -68,11 +68,13 @@ func AppendDataStore(path string) error {
 	if defaultOps == nil {
 		return errors.New("No init")
 	}
-	datastore, err := NewDatastore(path, defaultOps)
-	if err != nil {
-		panic(err)
-	}
-	dbs[path] = datastore
+	CheckRun(path, func(p string) {
+		datastore, err := NewDatastore(path, defaultOps)
+		if err != nil {
+			panic(err)
+		}
+		dbs[p] = datastore
+	})
 	return nil
 }
 
