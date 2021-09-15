@@ -179,7 +179,7 @@ func diskTotalSpace() (float64, []disk.PartitionStat) {
 func (ws *NodeContext) machineInfo() protocol.InfoType {
 	v, _ := mem.VirtualMemory()
 	infos, _ := cpu.Info()
-	_, _, _, totalIn, totalOut, repoSize := statsBw()
+	_, _, _, totalIn, totalOut, repoSize := statsBwAndRepoSize()
 	totalSpace, _ := diskTotalSpace()
 	return protocol.InfoType{
 		MsgType: protocol.MsgType{
@@ -202,7 +202,7 @@ func (ws *NodeContext) machineInfo() protocol.InfoType {
 
 func (ws *NodeContext) PowerMiner() {
 	//ip, _ := config.GetConfigKeyString(commands.IpConfigKey)
-	_, _, _, totalIn, totalOut, repoSize := statsBw()
+	_, _, _, totalIn, totalOut, repoSize := statsBwAndRepoSize()
 	infos, _ := cpu.Info()
 
 	totalSpace, _ := diskTotalSpace()
@@ -236,7 +236,7 @@ func (ws *NodeContext) chiaInfo(id string) []byte {
 	return data
 }
 
-func statsBw() (error, float64, float64, int64, int64, uint64) {
+func statsBwAndRepoSize() (error, float64, float64, int64, int64, uint64) {
 	bw := service2.StatsBw()
 	size := service2.RepoSize()
 	return nil, bw.RateIn, bw.RateOut, bw.TotalIn, bw.TotalOut, size.RepoSize

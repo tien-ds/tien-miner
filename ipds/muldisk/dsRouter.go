@@ -182,3 +182,13 @@ func (m *MulDataStore) Batch() (ds.Batch, error) {
 	}
 	return nil, ds.ErrBatchUnsupported
 }
+
+func (m *MulDataStore) DiskUsage() (uint64, error) {
+	var t uint64
+	for _, ds := range dbs {
+		size, vlog := ds.DB.Size()
+		t += uint64(size)
+		t += uint64(vlog)
+	}
+	return t, nil
+}

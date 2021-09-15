@@ -25,21 +25,23 @@ func StartDiskManger() {
 // fixDevBlock fix err block or unmount mountpoint
 func fixDevBlock() {
 	blocksDev, _ := disk.Partitions(true)
+	has := HasDSMounts()
 	fond := func(dev string) bool {
-		for _, s := range blocksDev {
+		for _, s := range has {
 			if s.Device == dev {
 				return true
 			}
 		}
 		return false
 	}
-	has := HasDSMounts()
-	for _, parStat := range has {
-		if !fond(parStat.Device) {
-			if err := syscall.Unmount(parStat.Mountpoint, syscall.MNT_FORCE); err != nil {
-				logrus.Errorf("fixBlock Unmount %s", err)
-			} else {
-				logrus.Infof("fix %s", parStat.Mountpoint)
+	for _, parStat := range blocksDev {
+		if strings.HasPrefix(parStat.Mountpoint, DS_DIR_PREFIX) {
+			if !fond(parStat.Device) {
+				if err := syscall.Unmount(parStat.Mountpoint, syscall.MNT_FORCE); err != nil {
+					logrus.Errorf("fixBlock Unmount %s", err)
+				} else {
+					logrus.Infof("fix %s", parStat.Mountpoint)
+				}
 			}
 		}
 	}
