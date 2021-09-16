@@ -131,6 +131,7 @@ func StartGC(node *core.IpfsNode) {
 
 }
 
+// SetMaxSize used in GC
 func SetMaxSize(uint642 uint64) {
 	c, err := GetNode().Repo.Config()
 	if err != nil {

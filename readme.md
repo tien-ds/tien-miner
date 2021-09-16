@@ -5,7 +5,7 @@ go build -x -tags main github.com/ds/depaas/cmd/miner
 ```
 ### run
 ```shell
-./miner -data /mnt -size 100GB 
+./miner -data /mnt
 ```
 ## 1.build arm64
 ```shell

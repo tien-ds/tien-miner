@@ -1,10 +1,14 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
+	"github.com/ds/depaas/database/dispatchdb"
 	"github.com/ds/depaas/ipds"
 	"github.com/ds/depaas/pools"
 	"github.com/ds/depaas/protocol"
+	"github.com/ipfs/interface-go-ipfs-core/options"
+	"github.com/ipfs/interface-go-ipfs-core/path"
 	"math/rand"
 	"sort"
 
@@ -65,13 +69,35 @@ func ReceiveCid(cid cid.Cid) {
 	}
 }
 
+// DispatchBlock dispatch block must store CID in gw database
+// because miner everyone may invoke contract along.
 func DispatchBlock(block cid.Cid, peers []string) {
+	size := GetCidSize(block)
 	for _, peer := range peers {
 		NewPinServer(peer).PinAdd(block.String(), func(id string, result interface{}) {
 			bytes, _ := json.Marshal(result)
+			dispatchdb.Store(block.String(), peer, size)
 			logrus.Debugf("PinAdd %s %s", id, string(bytes))
 		})
 	}
+}
+
+func GetCidSize(cid cid.Cid) uint64 {
+	background := context.Background()
+	resolvePath, err := ipds.GetApi().ResolvePath(background, path.IpfsPath(cid))
+	entries, err := ipds.GetApi().Unixfs().Ls(background, resolvePath, options.Unixfs.ResolveChildren(true))
+	if err != nil {
+		return 0
+	}
+	var t uint64
+	for entry := range entries {
+		if entry.Err != nil {
+			break
+		}
+		t += entry.Size
+	}
+	logrus.Infof("cid %s size %d", cid.String(), t)
+	return t
 }
 
 func CleanCid(cid cid.Cid, peers []string) {

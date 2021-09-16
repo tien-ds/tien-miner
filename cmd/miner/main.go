@@ -13,7 +13,6 @@ import (
 	"github.com/ds/depaas/node/utils"
 	"github.com/ds/depaas/protocol"
 	gutils "github.com/ds/depaas/utils"
-	"github.com/dustin/go-humanize"
 	"github.com/sirupsen/logrus"
 	"os"
 )
@@ -21,20 +20,10 @@ import (
 var (
 	bindAddr = flag.String("bind", "", "bind ds addr")
 	data     = flag.String("data", "", "ds store dir")
-	size     = flag.String("size", "", "set max size (default 10GB)")
 )
 
 func init() {
 	os.Setenv("repo", "node")
-}
-
-func ReSizeArgs() {
-	if *size != "" {
-		bigBytes, err := humanize.ParseBigBytes(*size)
-		if err == nil {
-			ipds.SetMaxSize(bigBytes.Uint64())
-		}
-	}
 }
 
 func main() {
@@ -57,10 +46,8 @@ func main() {
 			//set repo Max size
 			ipds.SetMaxSize(uint642)
 		})
-
 	} else {
 		InitIpds()
-		ReSizeArgs()
 	}
 
 	go api.StartService("127.0.0.1:8888")
